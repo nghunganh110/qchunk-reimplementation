@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qchunk-reimplementation"
+version = "0.1.0"
+description = "From-scratch implementation of Q-chunking"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "jax",
+    "flax",
+    "optax",
+    "PyYAML",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
