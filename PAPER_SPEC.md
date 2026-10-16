@@ -200,3 +200,21 @@ $K=2$ independently initialized networks and returns values with shape
 $K \times B$. The output layers are linear.
 
 Implementation: `src/qchunk/networks.py`. Verification: `tests/test_networks.py`.
+
+## Flow implementation contract
+
+The training function receives action chunks with shape $B \times H \times A$
+and flattens only their final two axes. One interpolation time $u_b$ is sampled
+per chunk and broadcast over its $HA$ action coordinates. Gaussian noise has
+the same shape and dtype as the flattened action chunks.
+
+Invalid action positions are zeroed before averaging the squared velocity error.
+The denominator remains $BHA$, matching the reference implementation, so an
+incomplete chunk contributes less total weight than a complete chunk.
+
+Euler sampling starts from Gaussian noise, evaluates the vector field at
+$0, 1/T, \ldots, (T-1)/T$, and applies updates of size $1/T$. Clipping to the
+action range $[-1,1]$ occurs after the final Euler update. The same functions
+support extra leading axes, including the $N$ candidates needed by best-of-$N$.
+
+Implementation: `src/qchunk/flow.py`. Verification: `tests/test_flow.py`.
