@@ -218,3 +218,25 @@ action range $[-1,1]$ occurs after the final Euler update. The same functions
 support extra leading axes, including the $N$ candidates needed by best-of-$N$.
 
 Implementation: `src/qchunk/flow.py`. Verification: `tests/test_flow.py`.
+
+## QC target and best-of-N contract
+
+The sampler supplies raw rewards, masks, and validity indicators. The agent
+computes $R^{(H)}$ and $m^{(H)}$ from these arrays, then forms the target with
+$\gamma^H$. Incomplete chunks have `valid[:, -1] = 0` and contribute zero to
+the critic loss while remaining in its fixed-size denominator, matching the
+reference implementation.
+
+Best-of-$N$ creates candidates with shape $B \times N \times HA$. The critic
+ensemble evaluates them in one call and returns $K \times B \times N$. QC uses
+the configured ensemble aggregation (`mean` by default), applies `argmax` over
+the $N$ axis, and returns one flattened chunk per observation. The same procedure
+selects environment actions and next chunks for TD targets.
+
+Target critic parameters are updated after optimization using
+
+$$
+\bar\theta \leftarrow (1-\tau)\bar\theta + \tau\theta.
+$$
+
+Implementation: `src/qchunk/agent.py`. Verification: `tests/test_agent.py`.
