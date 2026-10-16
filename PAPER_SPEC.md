@@ -240,3 +240,24 @@ $$
 $$
 
 Implementation: `src/qchunk/agent.py`. Verification: `tests/test_agent.py`.
+
+## Training update contract
+
+The mutable training state contains flow parameters and Adam state, online
+critic parameters and Adam state, target critic parameters, and a JAX random
+key. One update performs the following operations:
+
+1. Compute flow-matching gradients on the dataset action chunks and update the
+   flow network.
+2. Use the pre-update flow and online critic to select best-of-$N$ chunks at
+   $s_{t+H}$.
+3. Evaluate those chunks with the target critic and construct a stopped-gradient
+   TD target.
+4. Update the online critic from the chunk TD loss.
+5. Polyak-update the target critic from the newly updated online critic.
+
+The whole update is JIT-compiled. Default benchmark values are Adam with learning
+rate $3\times10^{-4}$, $\gamma=0.99$, $\tau=0.005$, $K=2$, $N=32$, and $T=10$.
+
+Implementation: `src/qchunk/config.py` and `src/qchunk/training.py`.
+Verification: `tests/test_training.py`.
