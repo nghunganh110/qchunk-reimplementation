@@ -51,7 +51,10 @@ class QCTrainState:
         if observation_dim <= 0:
             raise ValueError("observation_dim must be positive")
 
-        rng = jax.random.key(seed)
+        # Flax serialization cannot currently encode JAX's typed PRNG keys.
+        # The legacy uint32 representation has identical random semantics and
+        # allows the complete training state to be checkpointed.
+        rng = jax.random.PRNGKey(seed)
         flow_rng, critic_rng, state_rng = jax.random.split(rng, 3)
         observations = jnp.zeros((1, observation_dim), dtype=jnp.float32)
         action_chunks = jnp.zeros((1, config.action_chunk_dim), dtype=jnp.float32)

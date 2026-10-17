@@ -261,3 +261,20 @@ rate $3\times10^{-4}$, $\gamma=0.99$, $\tau=0.005$, $K=2$, $N=32$, and $T=10$.
 
 Implementation: `src/qchunk/config.py` and `src/qchunk/training.py`.
 Verification: `tests/test_training.py`.
+
+## Offline training and checkpoints
+
+Offline pretraining samples start transitions uniformly from the fixed dataset,
+builds episode-safe chunks of length $H$, and performs one QC update per sampled
+batch. Dataset sampling uses a NumPy generator with its own recorded seed; model
+sampling uses the JAX key stored in the training state.
+
+Metrics are transferred to the host only at logging steps to avoid synchronizing
+the accelerator after every update. A checkpoint contains flow and critic
+parameters, both Adam states, target critic parameters, the current JAX random
+key, and a serialized copy of the static QC configuration. Loading requires a
+template state with the same configuration and restores enough state to resume
+the exact random and optimizer sequence.
+
+Implementation: `src/qchunk/offline.py` and `src/qchunk/checkpoint.py`.
+Verification: `tests/test_offline.py`.
