@@ -93,6 +93,22 @@ class QCTrainState:
         )
 
     @jax.jit
+    def select_action_chunks(self, observations: Array, rng: Array) -> tuple[Array, Array]:
+        """Select one best-of-N flattened action chunk per observation."""
+        return best_of_n_action_chunks(
+            self.flow.apply_fn,
+            self.flow.params,
+            self.critic.apply_fn,
+            self.critic.params,
+            observations,
+            rng,
+            action_chunk_dim=self.config.action_chunk_dim,
+            num_candidates=self.config.num_candidates,
+            num_flow_steps=self.config.num_flow_steps,
+            q_aggregation=self.config.q_aggregation,
+        )
+
+    @jax.jit
     def update(self, batch: JaxBatch) -> tuple["QCTrainState", dict[str, Array]]:
         """Apply one flow update, one critic update, and one target update."""
         expected_action_shape = (self.config.horizon, self.config.action_dim)

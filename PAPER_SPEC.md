@@ -298,3 +298,18 @@ networks operate on flattened chunks of dimension $HA=25$.
 
 Implementation: `src/qchunk/ogbench.py` and `src/qchunk/train_ogbench.py`.
 Configuration: `configs/cube_triple.yaml`. Verification: `tests/test_ogbench.py`.
+
+## Evaluation protocol
+
+At an action-chunk boundary, QC generates $N$ behavior chunks, selects the one
+with maximum aggregated online-critic value, and executes its actions open-loop.
+It samples another chunk only after all $H$ actions are consumed or stops early
+when the environment terminates or truncates. Evaluation randomness uses a key
+separate from the training RNG.
+
+Following the paper, the default evaluation uses 50 episodes. Success is read
+from OGBench's `info["success"]`; the reported metrics are success rate, mean
+episode return, and mean episode length.
+
+Implementation: `src/qchunk/evaluation.py` and
+`src/qchunk/evaluate_ogbench.py`. Verification: `tests/test_evaluation.py`.

@@ -39,3 +39,13 @@ uv run python -m qchunk.train_ogbench \
 The command prints JSON metrics and writes the final checkpoint path configured
 under `output.checkpoint`. See `PAPER_SPEC.md` for the equation-to-code mapping
 and implementation decisions.
+
+Evaluate the saved checkpoint over the paper's default 50 episodes:
+
+```bash
+uv run python -m qchunk.evaluate_ogbench \
+  --config configs/cube_triple.yaml
+```
+
+At each chunk boundary, evaluation generates one best-of-N chunk and executes
+its actions open-loop until all $H$ actions are used or the episode terminates.

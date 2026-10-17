@@ -24,5 +24,9 @@ offline:
   log_interval: 5000
   dataset_seed: 0
 
+evaluation:
+  episodes: 50
+  seed: 42
+
 output:
   checkpoint: runs/cube_triple/offline_final.msgpack

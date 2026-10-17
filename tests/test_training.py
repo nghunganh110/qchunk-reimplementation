@@ -113,6 +113,20 @@ def test_update_is_reusable_after_jit_compilation():
     assert all(bool(jnp.isfinite(value)) for value in second_metrics.values())
 
 
+def test_select_action_chunks_returns_one_flattened_chunk_per_observation():
+    config = small_config()
+    state = QCTrainState.create(seed=3, observation_dim=3, config=config)
+    observations = jnp.ones((3, 3), dtype=jnp.float32)
+
+    chunks, selected_indices = state.select_action_chunks(observations, jax.random.PRNGKey(4))
+
+    assert chunks.shape == (3, config.action_chunk_dim)
+    assert selected_indices.shape == (3,)
+    assert bool(jnp.all(jnp.isfinite(chunks)))
+    assert bool(jnp.all((chunks >= -1.0) & (chunks <= 1.0)))
+    assert bool(jnp.all((selected_indices >= 0) & (selected_indices < config.num_candidates)))
+
+
 @pytest.mark.parametrize(
     "overrides",
     [
