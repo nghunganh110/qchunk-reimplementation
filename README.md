@@ -54,6 +54,10 @@ Each training checkpoint includes the model, optimizer, target critic, JAX RNG,
 completed step, and dataset-sampling RNG. Resumed training therefore preserves
 the same sequence of minibatches as an uninterrupted run.
 
+The online replay buffer can be initialized from the complete offline dataset.
+It maintains chronological, episode-safe chunk sampling after circular storage
+wraparound; online fine-tuning uses this buffer in the next pipeline stage.
+
 Evaluate the saved checkpoint over the paper's default 50 episodes:
 
 ```bash

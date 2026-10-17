@@ -288,6 +288,25 @@ run therefore consumes the same minibatches as an uninterrupted run.
 Implementation: `src/qchunk/offline.py` and `src/qchunk/checkpoint.py`.
 Verification: `tests/test_offline.py`.
 
+## Online replay buffer
+
+Online transitions use the same six fields and semantics as the offline
+dataset. In particular, `terminals` marks an episode boundary (termination or
+truncation), while `masks` is zero only when the MDP terminates and bootstrapping
+must stop. The fixed-capacity circular buffer is initialized with the complete
+offline dataset, then new online transitions overwrite the oldest transitions.
+
+Sampling addresses transitions in chronological order even after the physical
+storage wraps. Chunks never wrap from the newest transition to the oldest and
+never cross a recorded episode boundary. The terminal transition itself remains
+valid; later chunk positions are padded using the same rules as offline data.
+The final seed-dataset transition is explicitly marked as a trajectory boundary
+before any separately collected online episode is appended; its Bellman mask is
+preserved.
+
+Implementation: `src/qchunk/replay_buffer.py`. Verification:
+`tests/test_replay_buffer.py`.
+
 ## OGBench integration
 
 The first benchmark is `cube-triple-play-singletask-task2-v0` using OGBench
