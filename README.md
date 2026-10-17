@@ -40,6 +40,20 @@ The command prints JSON metrics and writes the final checkpoint path configured
 under `output.checkpoint`. See `PAPER_SPEC.md` for the equation-to-code mapping
 and implementation decisions.
 
+Training also writes periodic checkpoints according to
+`offline.checkpoint_interval`. Resume toward the total configured step count
+with:
+
+```bash
+uv run python -m qchunk.train_ogbench \
+  --config configs/cube_triple.yaml \
+  --resume runs/cube_triple/checkpoints/offline_step_0050000.msgpack
+```
+
+Each training checkpoint includes the model, optimizer, target critic, JAX RNG,
+completed step, and dataset-sampling RNG. Resumed training therefore preserves
+the same sequence of minibatches as an uninterrupted run.
+
 Evaluate the saved checkpoint over the paper's default 50 episodes:
 
 ```bash

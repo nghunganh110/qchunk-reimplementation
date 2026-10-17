@@ -3,7 +3,12 @@ import numpy as np
 import pytest
 from flax import serialization
 
-from qchunk.checkpoint import load_checkpoint, save_checkpoint
+from qchunk.checkpoint import (
+    load_checkpoint,
+    load_training_checkpoint,
+    save_checkpoint,
+    save_training_checkpoint,
+)
 from qchunk.config import QCConfig
 from qchunk.dataset import TransitionDataset
 from qchunk.offline import OfflineTrainingConfig, train_offline
@@ -81,6 +86,70 @@ def test_checkpoint_restores_exact_state_and_can_resume(tmp_path):
     assert state_allclose(restored_next, expected_next)
 
 
+def test_interrupted_training_resumes_with_identical_state(tmp_path):
+    dataset = make_dataset()
+    uninterrupted = train_offline(
+        make_state(seed=7),
+        dataset,
+        OfflineTrainingConfig(steps=6, batch_size=4, log_interval=10, dataset_seed=11),
+    )
+    interrupted = train_offline(
+        make_state(seed=7),
+        dataset,
+        OfflineTrainingConfig(steps=3, batch_size=4, log_interval=10, dataset_seed=11),
+    )
+    path = save_training_checkpoint(
+        tmp_path / "offline_step_3.msgpack",
+        interrupted.state,
+        interrupted.step,
+        interrupted.dataset_rng_state,
+    )
+    restored = load_training_checkpoint(path, make_state(seed=999))
+    resumed = train_offline(
+        restored.state,
+        dataset,
+        OfflineTrainingConfig(steps=6, batch_size=4, log_interval=10, dataset_seed=999),
+        initial_step=restored.step,
+        dataset_rng_state=restored.dataset_rng_state,
+    )
+
+    assert resumed.step == 6
+    assert state_allclose(resumed.state, uninterrupted.state)
+    assert resumed.dataset_rng_state == uninterrupted.dataset_rng_state
+
+
+def test_periodic_checkpoint_callback_receives_completed_steps():
+    checkpoints = []
+    result = train_offline(
+        make_state(),
+        make_dataset(),
+        OfflineTrainingConfig(
+            steps=5,
+            batch_size=4,
+            log_interval=10,
+            checkpoint_interval=2,
+        ),
+        on_checkpoint=checkpoints.append,
+    )
+
+    assert [checkpoint.step for checkpoint in checkpoints] == [2, 4]
+    assert [int(checkpoint.state.flow.step) for checkpoint in checkpoints] == [2, 4]
+    assert result.step == 5
+
+
+def test_plain_model_checkpoint_has_no_resume_progress(tmp_path):
+    path = save_checkpoint(tmp_path / "state.msgpack", make_state())
+    with pytest.raises(TypeError, match="offline-training progress"):
+        load_training_checkpoint(path, make_state())
+
+
+def test_training_checkpoint_rejects_step_mismatched_with_optimizer(tmp_path):
+    state = make_state()
+    dataset_rng_state = np.random.default_rng(0).bit_generator.state
+    with pytest.raises(ValueError, match="optimizer step"):
+        save_training_checkpoint(tmp_path / "state.msgpack", state, 1, dataset_rng_state)
+
+
 def test_checkpoint_rejects_mismatched_config(tmp_path):
     path = save_checkpoint(tmp_path / "state.msgpack", make_state())
     mismatched_template = make_state(horizon=3)
@@ -94,8 +163,20 @@ def test_checkpoint_rejects_mismatched_config(tmp_path):
         OfflineTrainingConfig(steps=0, batch_size=4),
         OfflineTrainingConfig(steps=1, batch_size=0),
         OfflineTrainingConfig(steps=1, batch_size=4, log_interval=0),
+        OfflineTrainingConfig(steps=1, batch_size=4, checkpoint_interval=0),
     ],
 )
 def test_invalid_offline_config_is_rejected(config):
     with pytest.raises(ValueError):
         train_offline(make_state(), make_dataset(), config)
+
+
+@pytest.mark.parametrize("initial_step", [-1, 4])
+def test_invalid_initial_step_is_rejected(initial_step):
+    with pytest.raises(ValueError, match="initial_step"):
+        train_offline(
+            make_state(),
+            make_dataset(),
+            OfflineTrainingConfig(steps=3, batch_size=4),
+            initial_step=initial_step,
+        )

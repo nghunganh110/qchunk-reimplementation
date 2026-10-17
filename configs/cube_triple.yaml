@@ -23,6 +23,7 @@ offline:
   batch_size: 256
   log_interval: 5000
   dataset_seed: 0
+  checkpoint_interval: 50000
 
 evaluation:
   episodes: 50
@@ -30,3 +31,4 @@ evaluation:
 
 output:
   checkpoint: runs/cube_triple/offline_final.msgpack
+  checkpoint_dir: runs/cube_triple/checkpoints

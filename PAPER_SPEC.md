@@ -279,6 +279,12 @@ key, and a serialized copy of the static QC configuration. Loading requires a
 template state with the same configuration and restores enough state to resume
 the exact random and optimizer sequence.
 
+Long offline runs additionally save the completed global step and NumPy dataset
+sampling RNG at a configurable interval. Resume treats the configured number of
+steps as the total target, restores both JAX and dataset RNG state, and continues
+at the next global step. For a fixed platform and seed, an interrupted-and-resumed
+run therefore consumes the same minibatches as an uninterrupted run.
+
 Implementation: `src/qchunk/offline.py` and `src/qchunk/checkpoint.py`.
 Verification: `tests/test_offline.py`.
 

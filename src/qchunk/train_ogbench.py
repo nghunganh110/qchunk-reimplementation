@@ -5,9 +5,14 @@ from typing import Any
 
 import yaml
 
-from qchunk.checkpoint import save_checkpoint
+from qchunk.checkpoint import load_training_checkpoint, save_training_checkpoint
 from qchunk.config import QCConfig
-from qchunk.offline import MetricRecord, OfflineTrainingConfig, train_offline
+from qchunk.offline import (
+    MetricRecord,
+    OfflineTrainingConfig,
+    OfflineTrainingResult,
+    train_offline,
+)
 from qchunk.ogbench import load_ogbench
 from qchunk.training import QCTrainState
 
@@ -41,7 +46,11 @@ def print_record(record: MetricRecord) -> None:
     print(json.dumps({"step": record.step, **record.metrics}, sort_keys=True))
 
 
-def run(config_path: str | Path, steps_override: int | None = None) -> Path:
+def run(
+    config_path: str | Path,
+    steps_override: int | None = None,
+    resume_path: str | Path | None = None,
+) -> Path:
     experiment = load_experiment_config(config_path)
     environment_config = experiment["environment"]
     dataset_name = environment_config["name"]
@@ -63,14 +72,46 @@ def run(config_path: str | Path, steps_override: int | None = None) -> Path:
         offline_values = experiment["offline"].copy()
         if steps_override is not None:
             offline_values["steps"] = steps_override
+        training_config = OfflineTrainingConfig(**offline_values)
+
+        initial_step = 0
+        dataset_rng_state = None
+        if resume_path is not None:
+            restored = load_training_checkpoint(resume_path, state)
+            state = restored.state
+            initial_step = restored.step
+            dataset_rng_state = restored.dataset_rng_state
+
+        output_config = experiment["output"]
+        checkpoint_path = Path(output_config["checkpoint"])
+        checkpoint_dir = Path(
+            output_config.get("checkpoint_dir", checkpoint_path.parent / "checkpoints")
+        )
+
+        def save_periodic_checkpoint(progress: OfflineTrainingResult) -> None:
+            path = checkpoint_dir / f"offline_step_{progress.step:07d}.msgpack"
+            save_training_checkpoint(
+                path,
+                progress.state,
+                progress.step,
+                progress.dataset_rng_state,
+            )
+
         result = train_offline(
             state,
             bundle.train_dataset,
-            OfflineTrainingConfig(**offline_values),
+            training_config,
             on_log=print_record,
+            initial_step=initial_step,
+            dataset_rng_state=dataset_rng_state,
+            on_checkpoint=save_periodic_checkpoint,
         )
-        checkpoint_path = Path(experiment["output"]["checkpoint"])
-        return save_checkpoint(checkpoint_path, result.state)
+        return save_training_checkpoint(
+            checkpoint_path,
+            result.state,
+            result.step,
+            result.dataset_rng_state,
+        )
     finally:
         bundle.env.close()
         bundle.eval_env.close()
@@ -79,9 +120,10 @@ def run(config_path: str | Path, steps_override: int | None = None) -> Path:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline-pretrain QC on OGBench")
     parser.add_argument("--config", required=True, type=Path)
-    parser.add_argument("--steps", type=int, help="Override offline steps for a smoke run")
+    parser.add_argument("--steps", type=int, help="Override the total target offline steps")
+    parser.add_argument("--resume", type=Path, help="Resume from an offline-training checkpoint")
     args = parser.parse_args()
-    checkpoint_path = run(args.config, args.steps)
+    checkpoint_path = run(args.config, args.steps, args.resume)
     print(f"Saved checkpoint: {checkpoint_path}")
 
 
