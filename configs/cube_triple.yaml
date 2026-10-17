@@ -25,6 +25,18 @@ offline:
   dataset_seed: 0
   checkpoint_interval: 50000
 
+online:
+  steps: 1000000
+  buffer_capacity: 2000000
+  batch_size: 256
+  start_training: 5000
+  updates_per_step: 1
+  log_interval: 5000
+  evaluation_interval: 100000
+  replay_seed: 1
+  policy_seed: 1
+  environment_seed: 1
+
 evaluation:
   episodes: 50
   seed: 42
@@ -32,3 +44,4 @@ evaluation:
 output:
   checkpoint: runs/cube_triple/offline_final.msgpack
   checkpoint_dir: runs/cube_triple/checkpoints
+  online_checkpoint: runs/cube_triple/online_final.msgpack

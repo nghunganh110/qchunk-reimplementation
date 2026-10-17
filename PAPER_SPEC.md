@@ -307,6 +307,29 @@ preserved.
 Implementation: `src/qchunk/replay_buffer.py`. Verification:
 `tests/test_replay_buffer.py`.
 
+## Online fine-tuning
+
+The online phase starts from the offline-trained QC state and a replay buffer
+seeded with the complete offline dataset. The behavior policy samples one
+best-of-$N$ action chunk and executes it open-loop. If an episode ends before all
+$H$ actions are consumed, the remaining queued actions are discarded.
+
+Every environment transition is appended with
+`terminals = terminated or truncated` and `masks = 1 - terminated`. Thus a time
+limit stops a chunk but retains bootstrap eligibility. After a configurable
+number of collection steps, each environment step performs the configured
+number of QC updates using uniformly sampled chunks from the combined replay
+buffer. This matches the offline-to-online QC path in the released code, whose
+defaults use one update per environment step and begin updates after 5,000
+online steps.
+
+Training and evaluation environments remain separate. Evaluation runs at a
+configurable environment-step interval and does not alter the learner's JAX RNG
+or the online policy RNG.
+
+Implementation: `src/qchunk/online.py` and
+`src/qchunk/train_online_ogbench.py`. Verification: `tests/test_online.py`.
+
 ## OGBench integration
 
 The first benchmark is `cube-triple-play-singletask-task2-v0` using OGBench

@@ -58,6 +58,35 @@ The online replay buffer can be initialized from the complete offline dataset.
 It maintains chronological, episode-safe chunk sampling after circular storage
 wraparound; online fine-tuning uses this buffer in the next pipeline stage.
 
+After offline pretraining, fine-tune the checkpoint online with:
+
+```bash
+uv run python -m qchunk.train_online_ogbench \
+  --config configs/cube_triple.yaml
+```
+
+Evaluate the resulting online checkpoint with:
+
+```bash
+uv run python -m qchunk.evaluate_ogbench \
+  --config configs/cube_triple.yaml \
+  --checkpoint runs/cube_triple/online_final.msgpack
+```
+
+At each action-chunk boundary the policy generates a best-of-N chunk and executes
+it open-loop. Every environment transition is appended to the replay buffer;
+after `online.start_training`, QC updates sample uniformly from the buffer seeded
+with the complete offline dataset. A short end-to-end run that includes learner
+updates and one evaluation episode is:
+
+```bash
+uv run python -m qchunk.train_online_ogbench \
+  --config configs/cube_triple.yaml \
+  --steps 10 \
+  --start-training 1 \
+  --eval-episodes 1
+```
+
 Evaluate the saved checkpoint over the paper's default 50 episodes:
 
 ```bash
