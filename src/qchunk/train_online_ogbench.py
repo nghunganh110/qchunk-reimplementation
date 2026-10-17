@@ -1,5 +1,6 @@
 import argparse
 import json
+from copy import deepcopy
 from pathlib import Path
 
 from qchunk.checkpoint import load_checkpoint, save_checkpoint
@@ -9,8 +10,14 @@ from qchunk.ogbench import (
     load_ogbench,
     restore_ogbench_env_state,
 )
-from qchunk.online import OnlineMetricRecord, OnlineTrainingConfig, train_online
+from qchunk.online import (
+    OnlineEpisodeRecord,
+    OnlineMetricRecord,
+    OnlineTrainingConfig,
+    train_online,
+)
 from qchunk.online_checkpoint import load_online_checkpoint, save_online_checkpoint
+from qchunk.tracking import MetricLogger, record_manifest_event, run_directory
 from qchunk.train_ogbench import load_experiment_config, make_agent_config
 from qchunk.training import QCTrainState
 
@@ -64,14 +71,45 @@ def run(
             evaluation_values["episodes"] = evaluation_episodes_override
         evaluation_config = EvaluationConfig(**evaluation_values)
 
+        initial_step = 0 if resume is None else resume.environment_steps
+        effective_experiment = deepcopy(experiment)
+        effective_experiment["online"] = online_values
+        effective_experiment["evaluation"] = evaluation_values
+        run_dir = run_directory(effective_experiment)
+        metric_logger = MetricLogger(run_dir)
+        for phase in ("online", "online_evaluation", "online_episode"):
+            metric_logger.prepare_phase(phase, resume_step=initial_step)
+        record_manifest_event(
+            run_dir,
+            effective_experiment,
+            "online",
+            resume_checkpoint=(resume_path if resume_path is not None else checkpoint_path),
+            resume_step=initial_step,
+        )
+
         def evaluate_state(_step: int, current_state: QCTrainState) -> dict[str, float]:
             return evaluate(current_state, bundle.eval_env, evaluation_config).as_metrics()
+
+        def log_record(phase: str, record: OnlineMetricRecord) -> None:
+            _print_record(phase, record)
+            metric_logger.log(phase, record.step, record.metrics)
+
+        def log_episode(record: OnlineEpisodeRecord) -> None:
+            metric_logger.log(
+                "online_episode",
+                record.end_step,
+                {
+                    "episode_return": record.episode_return,
+                    "length": float(record.length),
+                    "success": record.success,
+                },
+            )
 
         offline_output_path = Path(experiment["output"]["checkpoint"])
         resume_output_path = Path(
             experiment["output"].get(
                 "online_resume_checkpoint",
-                offline_output_path.with_name("online_resume.msgpack"),
+                offline_output_path.with_name("online_resume"),
             )
         )
 
@@ -80,9 +118,10 @@ def run(
             bundle.env,
             bundle.train_dataset,
             online_config,
-            on_log=lambda record: _print_record("online", record),
+            on_log=lambda record: log_record("online", record),
             evaluate_fn=evaluate_state,
-            on_evaluate=lambda record: _print_record("evaluation", record),
+            on_evaluate=lambda record: log_record("online_evaluation", record),
+            on_episode=log_episode,
             resume=resume,
             capture_environment_state=capture_ogbench_env_state,
             restore_environment_state=restore_ogbench_env_state,

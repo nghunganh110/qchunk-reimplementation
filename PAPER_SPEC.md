@@ -338,6 +338,22 @@ single atomically replaced directory so full replay snapshots do not
 accumulate. Replay fields are streamed to separate NumPy files, avoiding an
 additional full-buffer copy in host memory during checkpointing.
 
+## Experiment tracking
+
+Offline updates, online updates, completed online episodes, and evaluations are
+written to both structured JSONL and long-form CSV in the run directory. Resume
+first removes records for the resumed phase whose step is newer than the loaded
+checkpoint, preventing metrics from an abandoned execution branch from mixing
+with the continuation.
+
+The run manifest records each invocation's effective configuration (including
+CLI overrides), command line, input checkpoint and resume step. It also records
+the Git commit and dirty state, Python and platform information, JAX backend and
+devices, and versions of the main numerical and benchmark dependencies.
+
+Implementation: `src/qchunk/tracking.py` and the three benchmark CLIs.
+Verification: `tests/test_tracking.py`.
+
 Implementation: `src/qchunk/online.py` and
 `src/qchunk/train_online_ogbench.py`. Checkpoint implementation:
 `src/qchunk/online_checkpoint.py` and the OGBench state helpers in

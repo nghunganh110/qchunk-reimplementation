@@ -83,6 +83,7 @@ def make_dataset(size=4):
 def test_online_loop_executes_chunks_collects_data_and_updates():
     env = FakeEnv(episode_length=3)
     evaluations = []
+    episode_callbacks = []
 
     def evaluate_state(step, state):
         evaluations.append((step, state.updates))
@@ -102,6 +103,7 @@ def test_online_loop_executes_chunks_collects_data_and_updates():
             environment_seed=7,
         ),
         evaluate_fn=evaluate_state,
+        on_episode=episode_callbacks.append,
     )
 
     assert env.actions == [0.25, -0.5, 0.25, 0.25, -0.5]
@@ -115,6 +117,7 @@ def test_online_loop_executes_chunks_collects_data_and_updates():
     assert result.episodes[0].episode_return == 3.0
     assert result.episodes[0].length == 3
     assert result.episodes[0].success == 1.0
+    assert episode_callbacks == list(result.episodes)
 
     data = result.replay_buffer.as_dataset().data
     np.testing.assert_array_equal(data["rewards"][-5:], np.ones(5))

@@ -1,5 +1,6 @@
 import argparse
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ from qchunk.offline import (
     train_offline,
 )
 from qchunk.ogbench import load_ogbench
+from qchunk.tracking import MetricLogger, record_manifest_event, run_directory
 from qchunk.training import QCTrainState
 
 
@@ -82,6 +84,19 @@ def run(
             initial_step = restored.step
             dataset_rng_state = restored.dataset_rng_state
 
+        effective_experiment = deepcopy(experiment)
+        effective_experiment["offline"] = offline_values
+        run_dir = run_directory(effective_experiment)
+        metric_logger = MetricLogger(run_dir)
+        metric_logger.prepare_phase("offline", resume_step=initial_step)
+        record_manifest_event(
+            run_dir,
+            effective_experiment,
+            "offline",
+            resume_checkpoint=resume_path,
+            resume_step=initial_step,
+        )
+
         output_config = experiment["output"]
         checkpoint_path = Path(output_config["checkpoint"])
         checkpoint_dir = Path(
@@ -97,11 +112,15 @@ def run(
                 progress.dataset_rng_state,
             )
 
+        def log_record(record: MetricRecord) -> None:
+            print_record(record)
+            metric_logger.log("offline", record.step, record.metrics)
+
         result = train_offline(
             state,
             bundle.train_dataset,
             training_config,
-            on_log=print_record,
+            on_log=log_record,
             initial_step=initial_step,
             dataset_rng_state=dataset_rng_state,
             on_checkpoint=save_periodic_checkpoint,

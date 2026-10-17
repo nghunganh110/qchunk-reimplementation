@@ -43,6 +43,7 @@ evaluation:
   seed: 42
 
 output:
+  run_dir: runs/cube_triple
   checkpoint: runs/cube_triple/offline_final.msgpack
   checkpoint_dir: runs/cube_triple/checkpoints
   online_checkpoint: runs/cube_triple/online_final.msgpack

@@ -103,6 +103,7 @@ def train_online(
     on_log: Callable[[OnlineMetricRecord], None] | None = None,
     evaluate_fn: Callable[[int, QCTrainState], Metrics] | None = None,
     on_evaluate: Callable[[OnlineMetricRecord], None] | None = None,
+    on_episode: Callable[[OnlineEpisodeRecord], None] | None = None,
     *,
     resume: OnlineTrainingProgress | None = None,
     capture_environment_state: Callable[[Any], dict[str, Any]] | None = None,
@@ -202,14 +203,15 @@ def train_online(
         episode_success = max(episode_success, float(info.get("success", 0.0)))
 
         if done:
-            episodes.append(
-                OnlineEpisodeRecord(
-                    end_step=step,
-                    episode_return=episode_return,
-                    length=episode_length,
-                    success=episode_success,
-                )
+            episode_record = OnlineEpisodeRecord(
+                end_step=step,
+                episode_return=episode_return,
+                length=episode_length,
+                success=episode_success,
             )
+            episodes.append(episode_record)
+            if on_episode is not None:
+                on_episode(episode_record)
             completed_episodes += 1
             observation, _ = env.reset()
             observation = _observation(observation, observation_dim)

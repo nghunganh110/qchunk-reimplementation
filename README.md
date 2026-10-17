@@ -106,6 +106,19 @@ of MB. Replay arrays are streamed directly to separate `.npy` files to avoid a
 large in-memory serialization copy, and the same directory is atomically
 replaced instead of accumulating step snapshots.
 
+Each run directory also contains:
+
+- `manifest.json`: effective configuration for every invocation, command-line
+  arguments, Git commit and dirty state, Python/platform details, JAX devices,
+  and dependency versions.
+- `metrics.jsonl`: one structured record per offline log, online log, completed
+  online episode, and evaluation.
+- `metrics.csv`: the same data in long form with one metric per row.
+
+On resume, metric rows after the checkpoint step are removed for the resumed
+phase before new values are appended. This prevents duplicate or stale branches
+in learning curves after an interrupted run.
+
 Evaluate the saved checkpoint over the paper's default 50 episodes:
 
 ```bash

@@ -1,10 +1,12 @@
 import argparse
 import json
+from copy import deepcopy
 from pathlib import Path
 
 from qchunk.checkpoint import load_checkpoint
 from qchunk.evaluation import EvaluationConfig, evaluate
 from qchunk.ogbench import make_ogbench_env
+from qchunk.tracking import MetricLogger, record_manifest_event, run_directory
 from qchunk.train_ogbench import load_experiment_config, make_agent_config
 from qchunk.training import QCTrainState
 
@@ -31,7 +33,20 @@ def run(
         if episodes_override is not None:
             evaluation_values["episodes"] = episodes_override
         result = evaluate(state, env, EvaluationConfig(**evaluation_values))
-        return result.as_metrics()
+        metrics = result.as_metrics()
+        effective_experiment = deepcopy(experiment)
+        effective_experiment["evaluation"] = evaluation_values
+        run_dir = run_directory(effective_experiment)
+        step = int(state.flow.step)
+        record_manifest_event(
+            run_dir,
+            effective_experiment,
+            "evaluation",
+            resume_checkpoint=checkpoint_path,
+            resume_step=step,
+        )
+        MetricLogger(run_dir).log("evaluation", step, metrics)
+        return metrics
     finally:
         env.close()
 
