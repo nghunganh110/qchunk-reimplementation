@@ -58,6 +58,15 @@ class FakeEnv:
         )
 
 
+def capture_fake_env(env):
+    return {"episode_step": env.episode_step}
+
+
+def restore_fake_env(env, state):
+    env.reset()
+    env.episode_step = int(state["episode_step"])
+
+
 def make_dataset(size=4):
     return TransitionDataset(
         {
@@ -179,6 +188,78 @@ def test_online_loop_updates_real_qc_state():
     assert all(np.isfinite(value) for value in result.records[-1].metrics.values())
 
 
+def test_interrupted_online_training_resumes_mid_chunk():
+    common = {
+        "buffer_capacity": 12,
+        "batch_size": 2,
+        "start_training": 1,
+        "log_interval": 10,
+        "evaluation_interval": None,
+        "checkpoint_interval": None,
+        "replay_seed": 4,
+        "policy_seed": 5,
+        "environment_seed": 6,
+    }
+    full_env = FakeEnv(episode_length=4)
+    full = train_online(
+        FakeState(),
+        full_env,
+        make_dataset(),
+        OnlineTrainingConfig(steps=6, **common),
+        capture_environment_state=capture_fake_env,
+    )
+
+    first_env = FakeEnv(episode_length=4)
+    first = train_online(
+        FakeState(),
+        first_env,
+        make_dataset(),
+        OnlineTrainingConfig(steps=3, **common),
+        capture_environment_state=capture_fake_env,
+    )
+    assert first.progress.queued_actions[:, 0].tolist() == [-0.5]
+
+    resumed_env = FakeEnv(episode_length=4)
+    resumed = train_online(
+        FakeState(),
+        resumed_env,
+        make_dataset(),
+        OnlineTrainingConfig(steps=6, **common),
+        resume=first.progress,
+        capture_environment_state=capture_fake_env,
+        restore_environment_state=restore_fake_env,
+    )
+
+    assert first_env.actions + resumed_env.actions == full_env.actions
+    assert resumed.state == full.state
+    assert resumed.progress.completed_episodes == full.progress.completed_episodes
+    assert resumed.progress.update_count == full.progress.update_count
+    assert resumed.replay_rng_state == full.replay_rng_state
+    np.testing.assert_array_equal(resumed.policy_rng, full.policy_rng)
+    for key in TransitionDataset.REQUIRED_FIELDS:
+        np.testing.assert_array_equal(
+            resumed.replay_buffer.as_dataset().data[key],
+            full.replay_buffer.as_dataset().data[key],
+        )
+
+
+def test_checkpoint_callback_requires_environment_capture():
+    with pytest.raises(ValueError, match="capture_environment_state"):
+        train_online(
+            FakeState(),
+            FakeEnv(),
+            make_dataset(),
+            OnlineTrainingConfig(
+                steps=1,
+                buffer_capacity=5,
+                batch_size=2,
+                checkpoint_interval=1,
+                evaluation_interval=None,
+            ),
+            on_checkpoint=lambda _progress: None,
+        )
+
+
 @pytest.mark.parametrize(
     "overrides",
     [
@@ -189,6 +270,7 @@ def test_online_loop_updates_real_qc_state():
         {"updates_per_step": 0},
         {"log_interval": 0},
         {"evaluation_interval": 0},
+        {"checkpoint_interval": 0},
     ],
 )
 def test_invalid_online_config_is_rejected(overrides):

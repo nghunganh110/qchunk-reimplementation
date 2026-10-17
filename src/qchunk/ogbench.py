@@ -1,8 +1,10 @@
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import mujoco
 import numpy as np
 import ogbench
 
@@ -55,6 +57,81 @@ def convert_ogbench_dataset(
 def make_ogbench_env(dataset_name: str):
     """Create an OGBench environment without downloading a dataset."""
     return ogbench.make_env_and_datasets(dataset_name, env_only=True)
+
+
+def capture_ogbench_env_state(env: Any) -> dict[str, Any]:
+    """Capture MuJoCo and wrapper state required for mid-episode resume."""
+    unwrapped = env.unwrapped
+    if not hasattr(unwrapped, "model") or not hasattr(unwrapped, "data"):
+        raise TypeError("OGBench environment must expose MuJoCo model and data")
+
+    specification = mujoco.mjtState.mjSTATE_FULLPHYSICS
+    physics_state = np.empty(mujoco.mj_stateSize(unwrapped.model, specification), dtype=np.float64)
+    mujoco.mj_getState(unwrapped.model, unwrapped.data, physics_state, specification)
+    elapsed_steps = getattr(env, "_elapsed_steps", None)
+    return {
+        "physics_state": physics_state,
+        "mocap_pos": unwrapped.data.mocap_pos.copy(),
+        "mocap_quat": unwrapped.data.mocap_quat.copy(),
+        "control": unwrapped.data.ctrl.copy(),
+        # OGBench computes the next relative action from cached site kinematics.
+        # mj_step may leave these at a different pipeline stage than mj_forward.
+        "site_xpos": unwrapped.data.site_xpos.copy(),
+        "site_xmat": unwrapped.data.site_xmat.copy(),
+        "success": bool(getattr(unwrapped, "_success", False)),
+        "elapsed_steps": -1 if elapsed_steps is None else int(elapsed_steps),
+        "np_random_state_json": json.dumps(
+            unwrapped.np_random.bit_generator.state,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+    }
+
+
+def restore_ogbench_env_state(env: Any, state: Mapping[str, Any]) -> None:
+    """Restore a snapshot produced by :func:`capture_ogbench_env_state`."""
+    required = {
+        "physics_state",
+        "mocap_pos",
+        "mocap_quat",
+        "control",
+        "site_xpos",
+        "site_xmat",
+        "success",
+        "elapsed_steps",
+        "np_random_state_json",
+    }
+    missing = required - state.keys()
+    if missing:
+        raise ValueError(f"OGBench environment state is missing fields: {sorted(missing)}")
+
+    # Reset first so lazy MuJoCo model compilation and task setup are complete.
+    env.reset()
+    unwrapped = env.unwrapped
+    specification = mujoco.mjtState.mjSTATE_FULLPHYSICS
+    physics_state = np.asarray(state["physics_state"], dtype=np.float64)
+    expected_size = mujoco.mj_stateSize(unwrapped.model, specification)
+    if physics_state.shape != (expected_size,):
+        raise ValueError("MuJoCo physics state has an incompatible shape")
+
+    unwrapped.data.mocap_pos[:] = np.asarray(state["mocap_pos"])
+    unwrapped.data.mocap_quat[:] = np.asarray(state["mocap_quat"])
+    mujoco.mj_setState(unwrapped.model, unwrapped.data, physics_state, specification)
+    unwrapped.data.ctrl[:] = np.asarray(state["control"])
+    mujoco.mj_forward(unwrapped.model, unwrapped.data)
+    # mj_forward refreshes derived kinematics but also recomputes warm-start
+    # acceleration. Restore the full integration state once more so the next
+    # mj_step starts from the exact saved solver state.
+    mujoco.mj_setState(unwrapped.model, unwrapped.data, physics_state, specification)
+    unwrapped.data.ctrl[:] = np.asarray(state["control"])
+    unwrapped.data.site_xpos[:] = np.asarray(state["site_xpos"])
+    unwrapped.data.site_xmat[:] = np.asarray(state["site_xmat"])
+    unwrapped._success = bool(state["success"])
+    unwrapped.np_random.bit_generator.state = json.loads(state["np_random_state_json"])
+
+    elapsed_steps = int(state["elapsed_steps"])
+    if hasattr(env, "_elapsed_steps"):
+        env._elapsed_steps = None if elapsed_steps < 0 else elapsed_steps
 
 
 def load_ogbench(

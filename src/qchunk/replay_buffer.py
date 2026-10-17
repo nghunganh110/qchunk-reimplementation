@@ -8,6 +8,8 @@ from qchunk.dataset import ChunkBatch, TransitionDataset
 class ReplayBuffer:
     """Fixed-capacity circular buffer with episode-safe chunk sampling."""
 
+    REQUIRED_FIELDS = TransitionDataset.REQUIRED_FIELDS
+
     def __init__(self, capacity: int, observation_dim: int, action_dim: int):
         for name, value in {
             "capacity": capacity,
@@ -153,6 +155,91 @@ class ReplayBuffer:
         return TransitionDataset(
             {key: values[physical_indices].copy() for key, values in self._data.items()}
         )
+
+    def state_dict(self) -> dict[str, object]:
+        """Return a chronological snapshot suitable for checkpointing."""
+        dataset = self.as_dataset()
+        return {
+            "capacity": self.capacity,
+            "data": {key: values.copy() for key, values in dataset.data.items()},
+        }
+
+    def storage_state(self) -> dict[str, object]:
+        """Expose physical storage for streaming checkpoint writes without copies."""
+        return {
+            "capacity": self.capacity,
+            "size": self.size,
+            "pointer": self.pointer,
+            "data": self._data,
+        }
+
+    @classmethod
+    def from_state_dict(cls, state: Mapping[str, object]) -> "ReplayBuffer":
+        """Restore a buffer snapshot produced by :meth:`state_dict`."""
+        if "capacity" not in state or "data" not in state:
+            raise ValueError("replay buffer state requires capacity and data")
+        data = state["data"]
+        if not isinstance(data, Mapping):
+            raise TypeError("replay buffer data must be a mapping")
+        dataset = TransitionDataset(dict(data))
+        capacity = int(state["capacity"])
+        if capacity < len(dataset):
+            raise ValueError("replay buffer capacity is smaller than its data")
+
+        buffer = cls(
+            capacity=capacity,
+            observation_dim=dataset.data["observations"].shape[-1],
+            action_dim=dataset.data["actions"].shape[-1],
+        )
+        for key in TransitionDataset.REQUIRED_FIELDS:
+            buffer._data[key][: len(dataset)] = dataset.data[key]
+        buffer.size = len(dataset)
+        buffer.pointer = buffer.size % buffer.capacity
+        return buffer
+
+    @classmethod
+    def from_storage_state(cls, state: Mapping[str, object]) -> "ReplayBuffer":
+        """Restore the physical storage representation used by large checkpoints."""
+        required = {"capacity", "size", "pointer", "data"}
+        missing = required - state.keys()
+        if missing:
+            raise ValueError(f"replay storage state is missing fields: {sorted(missing)}")
+        data = state["data"]
+        if not isinstance(data, Mapping):
+            raise TypeError("replay storage data must be a mapping")
+        missing_data = set(TransitionDataset.REQUIRED_FIELDS) - data.keys()
+        if missing_data:
+            raise ValueError(f"replay storage data is missing fields: {sorted(missing_data)}")
+
+        observations = np.asarray(data["observations"])
+        actions = np.asarray(data["actions"])
+        if observations.ndim != 2 or actions.ndim != 2:
+            raise ValueError("replay storage observations and actions must be matrices")
+        capacity = int(state["capacity"])
+        size = int(state["size"])
+        pointer = int(state["pointer"])
+        if observations.shape[0] != capacity or actions.shape[0] != capacity:
+            raise ValueError("replay storage arrays must match capacity")
+        if not 0 <= size <= capacity or not 0 <= pointer < capacity:
+            raise ValueError("replay storage size or pointer is invalid")
+
+        buffer = cls(capacity, observations.shape[1], actions.shape[1])
+        expected_shapes = {
+            "observations": (capacity, buffer.observation_dim),
+            "actions": (capacity, buffer.action_dim),
+            "rewards": (capacity,),
+            "next_observations": (capacity, buffer.observation_dim),
+            "masks": (capacity,),
+            "terminals": (capacity,),
+        }
+        for key, expected_shape in expected_shapes.items():
+            values = np.asarray(data[key], dtype=np.float32)
+            if values.shape != expected_shape:
+                raise ValueError(f"replay storage field {key} has an invalid shape")
+            buffer._data[key][...] = values
+        buffer.size = size
+        buffer.pointer = pointer
+        return buffer
 
     def _logical_to_physical(self, indices: np.ndarray) -> np.ndarray:
         oldest = (self.pointer - self.size) % self.capacity

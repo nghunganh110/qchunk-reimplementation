@@ -87,6 +87,25 @@ uv run python -m qchunk.train_online_ogbench \
   --eval-episodes 1
 ```
 
+Online training overwrites one resumable checkpoint at
+`output.online_resume_checkpoint` according to `online.checkpoint_interval`.
+Resume toward the configured total environment-step count with:
+
+```bash
+uv run python -m qchunk.train_online_ogbench \
+  --config configs/cube_triple.yaml \
+  --resume runs/cube_triple/online_resume
+```
+
+This checkpoint includes the learner, complete replay buffer, policy and replay
+RNGs, current observation, remaining queued actions, partial episode metrics,
+MuJoCo physics state, task targets, environment RNG, and time-limit counter. It
+can therefore continue in the middle of an episode and action chunk. Since the
+complete replay buffer is stored, the checkpoint directory may grow to hundreds
+of MB. Replay arrays are streamed directly to separate `.npy` files to avoid a
+large in-memory serialization copy, and the same directory is atomically
+replaced instead of accumulating step snapshots.
+
 Evaluate the saved checkpoint over the paper's default 50 episodes:
 
 ```bash

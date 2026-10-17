@@ -129,6 +129,36 @@ def test_initial_dataset_must_fit_capacity():
         ReplayBuffer.from_dataset(make_dataset(), capacity=3)
 
 
+def test_state_dict_round_trip_preserves_wrapped_contents():
+    buffer = ReplayBuffer(capacity=4, observation_dim=2, action_dim=1)
+    for index in range(6):
+        buffer.add_transition(transition(index, terminal=index == 5))
+
+    restored = ReplayBuffer.from_state_dict(buffer.state_dict())
+
+    assert restored.capacity == buffer.capacity
+    assert restored.pointer == 0
+    for key in TransitionDataset.REQUIRED_FIELDS:
+        np.testing.assert_array_equal(
+            restored.as_dataset().data[key], buffer.as_dataset().data[key]
+        )
+
+
+def test_physical_storage_round_trip_preserves_pointer():
+    buffer = ReplayBuffer(capacity=4, observation_dim=2, action_dim=1)
+    for index in range(6):
+        buffer.add_transition(transition(index, terminal=index == 5))
+
+    restored = ReplayBuffer.from_storage_state(buffer.storage_state())
+
+    assert restored.size == buffer.size
+    assert restored.pointer == buffer.pointer
+    for key in TransitionDataset.REQUIRED_FIELDS:
+        np.testing.assert_array_equal(
+            restored.as_dataset().data[key], buffer.as_dataset().data[key]
+        )
+
+
 def test_sampled_replay_chunk_can_update_qc_state():
     buffer = ReplayBuffer.from_dataset(make_dataset(), capacity=5)
     batch = buffer.sample_chunks(4, 2, np.random.default_rng(0))

@@ -4,8 +4,13 @@ from pathlib import Path
 
 from qchunk.checkpoint import load_checkpoint, save_checkpoint
 from qchunk.evaluation import EvaluationConfig, evaluate
-from qchunk.ogbench import load_ogbench
+from qchunk.ogbench import (
+    capture_ogbench_env_state,
+    load_ogbench,
+    restore_ogbench_env_state,
+)
 from qchunk.online import OnlineMetricRecord, OnlineTrainingConfig, train_online
+from qchunk.online_checkpoint import load_online_checkpoint, save_online_checkpoint
 from qchunk.train_ogbench import load_experiment_config, make_agent_config
 from qchunk.training import QCTrainState
 
@@ -20,6 +25,7 @@ def run(
     steps_override: int | None = None,
     start_training_override: int | None = None,
     evaluation_episodes_override: int | None = None,
+    resume_path: str | Path | None = None,
 ) -> Path:
     experiment = load_experiment_config(config_path)
     if not isinstance(experiment.get("online"), dict):
@@ -38,9 +44,14 @@ def run(
             observation_dim=bundle.env.observation_space.shape[0],
             config=agent_config,
         )
-        if checkpoint_path is None:
-            checkpoint_path = experiment["output"]["checkpoint"]
-        state = load_checkpoint(checkpoint_path, template)
+        resume = None
+        if resume_path is not None:
+            resume = load_online_checkpoint(resume_path, template)
+            state = resume.state
+        else:
+            if checkpoint_path is None:
+                checkpoint_path = experiment["output"]["checkpoint"]
+            state = load_checkpoint(checkpoint_path, template)
 
         online_values = experiment["online"].copy()
         if steps_override is not None:
@@ -56,6 +67,14 @@ def run(
         def evaluate_state(_step: int, current_state: QCTrainState) -> dict[str, float]:
             return evaluate(current_state, bundle.eval_env, evaluation_config).as_metrics()
 
+        offline_output_path = Path(experiment["output"]["checkpoint"])
+        resume_output_path = Path(
+            experiment["output"].get(
+                "online_resume_checkpoint",
+                offline_output_path.with_name("online_resume.msgpack"),
+            )
+        )
+
         result = train_online(
             state,
             bundle.env,
@@ -64,8 +83,12 @@ def run(
             on_log=lambda record: _print_record("online", record),
             evaluate_fn=evaluate_state,
             on_evaluate=lambda record: _print_record("evaluation", record),
+            resume=resume,
+            capture_environment_state=capture_ogbench_env_state,
+            restore_environment_state=restore_ogbench_env_state,
+            on_checkpoint=lambda progress: save_online_checkpoint(resume_output_path, progress),
         )
-        offline_output_path = Path(experiment["output"]["checkpoint"])
+        save_online_checkpoint(resume_output_path, result.progress)
         output_path = Path(
             experiment["output"].get(
                 "online_checkpoint", offline_output_path.with_name("online_final.msgpack")
@@ -81,6 +104,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Online-fine-tune QC on OGBench")
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--checkpoint", type=Path, help="Offline checkpoint to load")
+    parser.add_argument("--resume", type=Path, help="Resume an online-training checkpoint")
     parser.add_argument("--steps", type=int, help="Override total online environment steps")
     parser.add_argument("--start-training", type=int, help="Override first online update step")
     parser.add_argument("--eval-episodes", type=int, help="Override evaluation episode count")
@@ -91,6 +115,7 @@ def main() -> None:
         args.steps,
         args.start_training,
         args.eval_episodes,
+        args.resume,
     )
     print(f"Saved checkpoint: {checkpoint_path}")
 

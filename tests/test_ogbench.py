@@ -5,7 +5,13 @@ import numpy as np
 import pytest
 
 from qchunk.config import QCConfig
-from qchunk.ogbench import convert_ogbench_dataset, load_ogbench
+from qchunk.ogbench import (
+    capture_ogbench_env_state,
+    convert_ogbench_dataset,
+    load_ogbench,
+    make_ogbench_env,
+    restore_ogbench_env_state,
+)
 from qchunk.train_ogbench import load_experiment_config, make_agent_config
 
 
@@ -83,3 +89,29 @@ def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_pat
         ),
         ("example-v0", {"env_only": True}),
     ]
+
+
+@pytest.mark.filterwarnings("ignore:.*Wayland.*")
+@pytest.mark.filterwarnings("ignore:.*Box low's precision lowered.*")
+@pytest.mark.filterwarnings("ignore:.*Box high's precision lowered.*")
+def test_cube_environment_state_round_trip():
+    env = make_ogbench_env("cube-triple-play-singletask-task2-v0")
+    try:
+        env.reset(seed=123)
+        env.step(np.zeros(5, dtype=np.float32))
+        snapshot = capture_ogbench_env_state(env)
+        actions = [
+            np.array([0.1, -0.1, 0.05, 0.2, -0.2], dtype=np.float32),
+            np.array([-0.05, 0.1, 0.0, -0.1, 0.2], dtype=np.float32),
+        ]
+        expected = [env.step(action) for action in actions]
+
+        restore_ogbench_env_state(env, snapshot)
+        actual = [env.step(action) for action in actions]
+
+        for actual_step, expected_step in zip(actual, expected, strict=True):
+            np.testing.assert_allclose(actual_step[0], expected_step[0], rtol=1e-6, atol=1e-6)
+            assert actual_step[1:4] == expected_step[1:4]
+            assert actual_step[4]["success"] == expected_step[4]["success"]
+    finally:
+        env.close()

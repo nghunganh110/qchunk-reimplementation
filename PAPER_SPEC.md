@@ -327,8 +327,22 @@ Training and evaluation environments remain separate. Evaluation runs at a
 configurable environment-step interval and does not alter the learner's JAX RNG
 or the online policy RNG.
 
+Online checkpoints support mid-episode and mid-chunk continuation. They contain
+the learner and optimizer state, chronological replay contents and capacity,
+policy and replay RNGs, global environment and update counts, current
+observation, queued actions, and partial episode statistics. For OGBench, the
+environment snapshot also contains MuJoCo full-physics state, mocap task targets,
+control values, cached site kinematics used to form the next relative action,
+environment RNG, success flag, and Gymnasium `TimeLimit` counter. Saving uses a
+single atomically replaced directory so full replay snapshots do not
+accumulate. Replay fields are streamed to separate NumPy files, avoiding an
+additional full-buffer copy in host memory during checkpointing.
+
 Implementation: `src/qchunk/online.py` and
-`src/qchunk/train_online_ogbench.py`. Verification: `tests/test_online.py`.
+`src/qchunk/train_online_ogbench.py`. Checkpoint implementation:
+`src/qchunk/online_checkpoint.py` and the OGBench state helpers in
+`src/qchunk/ogbench.py`. Verification: `tests/test_online.py`,
+`tests/test_online_checkpoint.py`, and `tests/test_ogbench.py`.
 
 ## OGBench integration
 
