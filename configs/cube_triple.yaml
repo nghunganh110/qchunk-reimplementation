@@ -1,0 +1,28 @@
+seed: 0
+
+environment:
+  name: cube-triple-play-singletask-task2-v0
+  dataset_dir: null
+  action_clip_eps: 1.0e-5
+
+agent:
+  horizon: 5
+  hidden_dims: [512, 512, 512, 512]
+  num_critics: 2
+  num_candidates: 32
+  num_flow_steps: 10
+  discount: 0.99
+  tau: 0.005
+  learning_rate: 3.0e-4
+  q_aggregation: mean
+  flow_layer_norm: false
+  critic_layer_norm: true
+
+offline:
+  steps: 1000000
+  batch_size: 256
+  log_interval: 5000
+  dataset_seed: 0
+
+output:
+  checkpoint: runs/cube_triple/offline_final.msgpack

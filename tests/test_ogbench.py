@@ -1,0 +1,85 @@
+from pathlib import Path
+from types import SimpleNamespace
+
+import numpy as np
+import pytest
+
+from qchunk.config import QCConfig
+from qchunk.ogbench import convert_ogbench_dataset, load_ogbench
+from qchunk.train_ogbench import load_experiment_config, make_agent_config
+
+
+def make_raw_dataset():
+    return {
+        "observations": np.arange(12).reshape(6, 2),
+        "actions": np.array([[-2.0], [-0.5], [0.0], [0.5], [1.0], [2.0]], dtype=np.float32),
+        "rewards": np.array([-1, -1, 0, -1, -1, -1]),
+        "next_observations": np.arange(2, 14).reshape(6, 2),
+        # Task completion and trajectory boundary are deliberately independent.
+        "masks": np.array([1, 1, 0, 1, 1, 1]),
+        "terminals": np.array([0, 0, 0, 1, 0, 1]),
+    }
+
+
+def test_conversion_preserves_ogbench_mask_and_terminal_semantics():
+    dataset = convert_ogbench_dataset(make_raw_dataset(), action_clip_eps=0.1)
+    np.testing.assert_array_equal(dataset.data["masks"], [1, 1, 0, 1, 1, 1])
+    np.testing.assert_array_equal(dataset.data["terminals"], [0, 0, 0, 1, 0, 1])
+    np.testing.assert_allclose(dataset.data["actions"][:, 0], [-0.9, -0.5, 0, 0.5, 0.9, 0.9])
+    assert dataset.data["observations"].dtype == np.float32
+
+
+def test_conversion_requires_regular_noncompact_dataset():
+    raw = make_raw_dataset()
+    del raw["next_observations"]
+    with pytest.raises(ValueError, match="next_observations"):
+        convert_ogbench_dataset(raw)
+
+
+def test_cube_triple_config_matches_environment_dimensions():
+    path = Path(__file__).parents[1] / "configs" / "cube_triple.yaml"
+    experiment = load_experiment_config(path)
+    agent = make_agent_config(experiment["agent"], action_dim=5)
+    assert isinstance(agent, QCConfig)
+    assert agent.horizon == 5
+    assert agent.action_chunk_dim == 25
+    assert agent.num_candidates == 32
+
+
+def test_agent_config_rejects_wrong_explicit_action_dimension():
+    with pytest.raises(ValueError, match="does not match"):
+        make_agent_config({"horizon": 5, "action_dim": 4}, action_dim=5)
+
+
+def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_path):
+    class FakeEnv:
+        observation_space = SimpleNamespace(shape=(2,))
+        action_space = SimpleNamespace(shape=(1,))
+
+        def close(self):
+            pass
+
+    train_env = FakeEnv()
+    eval_env = FakeEnv()
+    raw = make_raw_dataset()
+    calls = []
+
+    def fake_make(dataset_name, **kwargs):
+        calls.append((dataset_name, kwargs))
+        if kwargs.get("env_only"):
+            return eval_env
+        return train_env, raw, raw
+
+    monkeypatch.setattr("qchunk.ogbench.ogbench.make_env_and_datasets", fake_make)
+    bundle = load_ogbench("example-v0", dataset_dir=tmp_path)
+
+    assert bundle.env is train_env
+    assert bundle.eval_env is eval_env
+    assert len(bundle.train_dataset) == 6
+    assert calls == [
+        (
+            "example-v0",
+            {"compact_dataset": False, "dataset_dir": str(tmp_path)},
+        ),
+        ("example-v0", {"env_only": True}),
+    ]

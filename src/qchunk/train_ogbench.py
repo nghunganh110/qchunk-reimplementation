@@ -1,0 +1,89 @@
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from qchunk.checkpoint import save_checkpoint
+from qchunk.config import QCConfig
+from qchunk.offline import MetricRecord, OfflineTrainingConfig, train_offline
+from qchunk.ogbench import load_ogbench
+from qchunk.training import QCTrainState
+
+
+def load_experiment_config(path: str | Path) -> dict[str, Any]:
+    path = Path(path)
+    with path.open(encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+    if not isinstance(config, dict):
+        raise TypeError("experiment config must contain a YAML mapping")
+    for section in ("environment", "agent", "offline", "output"):
+        if not isinstance(config.get(section), dict):
+            raise TypeError(f"experiment config requires a '{section}' mapping")
+    return config
+
+
+def make_agent_config(values: dict[str, Any], action_dim: int) -> QCConfig:
+    values = values.copy()
+    configured_action_dim = values.pop("action_dim", action_dim)
+    if configured_action_dim != action_dim:
+        raise ValueError(
+            f"configured action_dim={configured_action_dim} does not match environment "
+            f"action_dim={action_dim}"
+        )
+    if "hidden_dims" in values:
+        values["hidden_dims"] = tuple(values["hidden_dims"])
+    return QCConfig(action_dim=action_dim, **values)
+
+
+def print_record(record: MetricRecord) -> None:
+    print(json.dumps({"step": record.step, **record.metrics}, sort_keys=True))
+
+
+def run(config_path: str | Path, steps_override: int | None = None) -> Path:
+    experiment = load_experiment_config(config_path)
+    environment_config = experiment["environment"]
+    dataset_name = environment_config["name"]
+    bundle = load_ogbench(
+        dataset_name,
+        dataset_dir=environment_config.get("dataset_dir"),
+        action_clip_eps=environment_config.get("action_clip_eps", 1e-5),
+    )
+    try:
+        observation_dim = bundle.env.observation_space.shape[0]
+        action_dim = bundle.env.action_space.shape[0]
+        agent_config = make_agent_config(experiment["agent"], action_dim)
+        state = QCTrainState.create(
+            seed=int(experiment.get("seed", 0)),
+            observation_dim=observation_dim,
+            config=agent_config,
+        )
+
+        offline_values = experiment["offline"].copy()
+        if steps_override is not None:
+            offline_values["steps"] = steps_override
+        result = train_offline(
+            state,
+            bundle.train_dataset,
+            OfflineTrainingConfig(**offline_values),
+            on_log=print_record,
+        )
+        checkpoint_path = Path(experiment["output"]["checkpoint"])
+        return save_checkpoint(checkpoint_path, result.state)
+    finally:
+        bundle.env.close()
+        bundle.eval_env.close()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Offline-pretrain QC on OGBench")
+    parser.add_argument("--config", required=True, type=Path)
+    parser.add_argument("--steps", type=int, help="Override offline steps for a smoke run")
+    args = parser.parse_args()
+    checkpoint_path = run(args.config, args.steps)
+    print(f"Saved checkpoint: {checkpoint_path}")
+
+
+if __name__ == "__main__":
+    main()

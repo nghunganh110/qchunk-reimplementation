@@ -23,11 +23,11 @@ def test_discounted_chunk_return_uses_discount_and_valid():
     np.testing.assert_allclose(returns, [1 + 0.9 * 2 + 0.9**2 * 3, 4 + 0.9 * 5])
 
 
-def test_bootstrap_mask_distinguishes_terminal_timeout_and_incomplete_chunk():
+def test_bootstrap_mask_distinguishes_success_boundary_and_incomplete_chunk():
     masks = jnp.array(
         [
-            [1.0, 1.0, 0.0],  # true terminal
-            [1.0, 1.0, 1.0],  # time-limit boundary
+            [1.0, 1.0, 0.0],  # task success disables bootstrap
+            [1.0, 1.0, 1.0],  # trajectory boundary may still bootstrap
             [1.0, 0.0, 0.0],  # incomplete padded chunk
         ]
     )

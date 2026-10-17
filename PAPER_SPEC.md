@@ -142,9 +142,12 @@ Episode boundary and bootstrap eligibility are separate:
 - `masks`: controls whether the critic target bootstraps.
 - `valid`: indicates which positions belong to the starting episode.
 
-In this implementation, `terminals` includes both true termination and time-limit
-truncation. A true termination has `masks = 0`; a time-limit truncation may keep
-`masks = 1` when its final observation is available for bootstrapping.
+For OGBench, these fields are intentionally independent. `terminals = 1` marks
+the end of a trajectory stored in the dataset, regardless of task completion.
+`masks = 0` marks task completion and disables the Bellman backup, even when the
+stored trajectory continues. Therefore both `terminal = 1, mask = 1` and
+`terminal = 0, mask = 0` are valid combinations. The chunk sampler uses
+`terminals` for sequence boundaries and the TD target uses `masks` for bootstrap.
 
 The transition ending the episode remains valid. Positions after that transition
 or beyond the stored dataset are invalid. Never join transitions from different
@@ -278,3 +281,20 @@ the exact random and optimizer sequence.
 
 Implementation: `src/qchunk/offline.py` and `src/qchunk/checkpoint.py`.
 Verification: `tests/test_offline.py`.
+
+## OGBench integration
+
+The first benchmark is `cube-triple-play-singletask-task2-v0` using OGBench
+1.1.2, Gymnasium 1.1.1, and MuJoCo 3.3.1, matching the released QC repository.
+OGBench is asked for a regular
+(`compact_dataset=False`) dataset containing explicit next observations. Its
+reward, mask, and terminal arrays are preserved; observations and actions are
+converted to float32 and actions are clipped to $[-1+10^{-5},1-10^{-5}]$.
+
+Training and evaluation use separate environment instances. The current adapter
+supports state-based vector observations and continuous vector actions. The
+benchmark configuration uses $S=46$, $A=5$, and $H=5$, so flow and critic
+networks operate on flattened chunks of dimension $HA=25$.
+
+Implementation: `src/qchunk/ogbench.py` and `src/qchunk/train_ogbench.py`.
+Configuration: `configs/cube_triple.yaml`. Verification: `tests/test_ogbench.py`.

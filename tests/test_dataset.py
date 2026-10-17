@@ -37,12 +37,12 @@ def test_padding_never_uses_next_episode():
     np.testing.assert_array_equal(batch.next_observations[:, :, 0], [[2, 3, 3, 3], [3, 3, 3, 3]])
 
 
-def test_time_limit_preserves_bootstrap_but_stops_chunk():
+def test_trajectory_boundary_preserves_bootstrap_but_stops_chunk():
     dataset = make_dataset()
     batch = dataset.get_chunks(np.array([3]), horizon=3)
     np.testing.assert_array_equal(batch.valid, [[1, 1, 1]])
     np.testing.assert_array_equal(batch.masks.prod(axis=1), [1])
-    # Move the time-limit boundary earlier to exercise a boundary inside the dataset.
+    # Move the trajectory boundary earlier while retaining bootstrap eligibility.
     dataset.data["terminals"][4] = 1
     batch = dataset.get_chunks(np.array([3]), horizon=3)
     np.testing.assert_array_equal(batch.actions[0, :, 0], [13, 14, 0])
