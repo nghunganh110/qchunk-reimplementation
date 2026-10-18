@@ -9,7 +9,7 @@ description = "From-scratch implementation of Q-chunking"
 requires-python = ">=3.12"
 dependencies = [
     "numpy",
-    "jax",
+    "jax[cuda12]",
     "flax",
     "optax",
     "PyYAML",

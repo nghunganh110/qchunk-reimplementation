@@ -1,8 +1,11 @@
+import http.client
 import json
+import ssl
 import urllib.error
 import urllib.request
 import warnings
 import zipfile
+import zlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,6 +22,16 @@ DATASET_URL = "https://rail.eecs.berkeley.edu/datasets/ogbench"
 REQUIRED_ARCHIVE_MEMBERS = frozenset({"observations.npy", "actions.npy", "terminals.npy"})
 DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 DOWNLOAD_REPORT_INTERVAL = 16 * 1024 * 1024
+DOWNLOAD_MAX_ATTEMPTS = 256
+DOWNLOAD_MAX_STALLED_ATTEMPTS = 3
+DOWNLOAD_TIMEOUT_SECONDS = 30
+RETRYABLE_DOWNLOAD_ERRORS = (
+    urllib.error.URLError,
+    TimeoutError,
+    ConnectionError,
+    http.client.HTTPException,
+    ssl.SSLError,
+)
 
 
 @dataclass(frozen=True)
@@ -101,18 +114,24 @@ def ogbench_dataset_paths(
 
 
 def validate_ogbench_dataset_archive(path: str | Path) -> None:
-    """Validate an OGBench NPZ directory without decompressing its large arrays."""
+    """Validate an OGBench NPZ directory and the CRC of every compressed member."""
     path = Path(path).expanduser()
     if not path.is_file():
         raise FileNotFoundError(f"OGBench archive does not exist: {path}")
     try:
         with zipfile.ZipFile(path) as archive:
             members = set(archive.namelist())
-    except zipfile.BadZipFile as error:
+            corrupt_member = archive.testzip()
+    except (EOFError, zipfile.BadZipFile, zlib.error) as error:
         raise ValueError(
             f"OGBench archive is incomplete or corrupt: {path}. "
             "Move or remove it so OGBench can download it again."
         ) from error
+    if corrupt_member is not None:
+        raise ValueError(
+            f"OGBench archive member failed its CRC check: {path}:{corrupt_member}. "
+            "Move or remove the archive so OGBench can download it again."
+        )
     missing = REQUIRED_ARCHIVE_MEMBERS - members
     if missing:
         raise ValueError(f"OGBench archive {path} is missing members: {sorted(missing)}")
@@ -130,54 +149,124 @@ def _response_total_size(response: Any, offset: int) -> int | None:
     return None
 
 
+def _validate_response_range(response: Any, offset: int) -> None:
+    if offset == 0 or response.status != 206:
+        return
+    content_range = response.headers.get("Content-Range", "")
+    prefix = content_range.split("/", 1)[0]
+    fields = prefix.split()
+    if len(fields) != 2 or fields[0].lower() != "bytes" or "-" not in fields[1]:
+        raise OSError(f"Server returned an invalid Content-Range while resuming: {content_range!r}")
+    start = fields[1].split("-", 1)[0]
+    if not start.isdigit() or int(start) != offset:
+        raise OSError(
+            f"Server resumed at byte {start!r}, but the local archive requires byte {offset}"
+        )
+
+
 def _download_archive(url: str, path: Path) -> None:
     """Download one archive atomically, resuming an interrupted temporary file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = path.with_suffix(f"{path.suffix}.tmp")
-    offset = temporary_path.stat().st_size if temporary_path.exists() else 0
-    headers = {"Range": f"bytes={offset}-"} if offset else {}
-    request = urllib.request.Request(url, headers=headers)
-    try:
-        response_context = urllib.request.urlopen(request)
-    except urllib.error.HTTPError as error:
-        if error.code == 416 and offset:
+    expected_size = None
+    stalled_attempts = 0
+
+    for attempt in range(1, DOWNLOAD_MAX_ATTEMPTS + 1):
+        initial_size = temporary_path.stat().st_size if temporary_path.exists() else 0
+        offset = initial_size
+        headers = {"Range": f"bytes={offset}-"} if offset else {}
+        request = urllib.request.Request(url, headers=headers)
+        network_error = None
+        try:
+            response_context = urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS)
+        except urllib.error.HTTPError as error:
+            if error.code == 416 and offset:
+                validate_ogbench_dataset_archive(temporary_path)
+                temporary_path.replace(path)
+                return
+            raise
+        except RETRYABLE_DOWNLOAD_ERRORS as error:
+            network_error = error
+            response_context = None
+
+        if response_context is not None:
+            with response_context as response:
+                status = getattr(response, "status", response.getcode())
+                if offset and status != 206:
+                    offset = 0
+                else:
+                    _validate_response_range(response, offset)
+                mode = "ab" if offset else "wb"
+                response_size = _response_total_size(response, offset)
+                if response_size is not None:
+                    expected_size = response_size
+                downloaded = offset
+                next_report = downloaded + DOWNLOAD_REPORT_INTERVAL
+                action = "Resuming" if offset else "Downloading"
+                print(f"{action} dataset: {url}")
+                with temporary_path.open(mode) as file:
+                    while True:
+                        try:
+                            chunk = response.read(DOWNLOAD_CHUNK_SIZE)
+                        except RETRYABLE_DOWNLOAD_ERRORS as error:
+                            network_error = error
+                            break
+                        if not chunk:
+                            break
+                        file.write(chunk)
+                        downloaded += len(chunk)
+                        if downloaded >= next_report:
+                            if expected_size is None:
+                                print(f"  downloaded {downloaded / 1024**2:.1f} MiB")
+                            else:
+                                print(
+                                    f"  downloaded {downloaded / 1024**2:.1f} / "
+                                    f"{expected_size / 1024**2:.1f} MiB"
+                                )
+                            next_report += DOWNLOAD_REPORT_INTERVAL
+
+        actual_size = temporary_path.stat().st_size if temporary_path.exists() else 0
+        if expected_size is None and temporary_path.exists():
+            try:
+                validate_ogbench_dataset_archive(temporary_path)
+            except (FileNotFoundError, ValueError):
+                pass
+            else:
+                temporary_path.replace(path)
+                return
+        elif expected_size is not None and actual_size == expected_size:
             validate_ogbench_dataset_archive(temporary_path)
             temporary_path.replace(path)
             return
-        raise
+        elif expected_size is not None and actual_size > expected_size:
+            raise OSError(
+                f"Downloaded archive is larger than the server reported for {path}: "
+                f"received {actual_size} of {expected_size} bytes"
+            )
 
-    with response_context as response:
-        status = getattr(response, "status", response.getcode())
-        if offset and status != 206:
-            offset = 0
-        mode = "ab" if offset else "wb"
-        expected_size = _response_total_size(response, offset)
-        downloaded = offset
-        next_report = downloaded + DOWNLOAD_REPORT_INTERVAL
-        action = "Resuming" if offset else "Downloading"
-        print(f"{action} dataset: {url}")
-        with temporary_path.open(mode) as file:
-            while chunk := response.read(DOWNLOAD_CHUNK_SIZE):
-                file.write(chunk)
-                downloaded += len(chunk)
-                if downloaded >= next_report:
-                    if expected_size is None:
-                        print(f"  downloaded {downloaded / 1024**2:.1f} MiB")
-                    else:
-                        print(
-                            f"  downloaded {downloaded / 1024**2:.1f} / "
-                            f"{expected_size / 1024**2:.1f} MiB"
-                        )
-                    next_report += DOWNLOAD_REPORT_INTERVAL
-
-    actual_size = temporary_path.stat().st_size
-    if expected_size is not None and actual_size != expected_size:
-        raise OSError(
-            f"Incomplete download for {path}: received {actual_size} of {expected_size} bytes. "
-            "Run the command again to resume."
+        if actual_size > initial_size:
+            stalled_attempts = 0
+        else:
+            stalled_attempts += 1
+        if attempt == DOWNLOAD_MAX_ATTEMPTS or stalled_attempts >= DOWNLOAD_MAX_STALLED_ATTEMPTS:
+            break
+        total = "unknown" if expected_size is None else str(expected_size)
+        reason = (
+            f"network error ({network_error})"
+            if network_error is not None
+            else "connection ended early"
         )
-    validate_ogbench_dataset_archive(temporary_path)
-    temporary_path.replace(path)
+        print(
+            f"  {reason} at {actual_size} / {total} bytes; automatically reconnecting "
+            f"(attempt {attempt + 1}/{DOWNLOAD_MAX_ATTEMPTS})"
+        )
+
+    actual_size = temporary_path.stat().st_size if temporary_path.exists() else 0
+    total = "unknown" if expected_size is None else str(expected_size)
+    raise OSError(
+        f"Incomplete download for {path}: received {actual_size} of {total} bytes after "
+        f"{attempt} attempts. Run the command again to resume."
+    )
 
 
 def download_ogbench_dataset_archives(

@@ -54,11 +54,13 @@ uv run python -m qchunk.train_ogbench \
   --steps 1
 ```
 
-Downloads are first written as `.npz.tmp` files. Repeating the same command
-resumes an interrupted download with an HTTP range request. A file receives its
-final `.npz` name only after its reported byte count and ZIP directory are valid.
-If preflight reports an already-finalized archive as corrupt, move that `.npz`
-aside and repeat the training command.
+Downloads are first written as `.npz.tmp` files. A short response automatically
+reconnects with an HTTP range request; repeating the same command also resumes
+the remaining bytes if all automatic attempts are exhausted. Resume responses
+must start at exactly the requested byte. A file receives its final `.npz` name
+only after its reported byte count, ZIP directory, and every compressed member's
+CRC are valid. If preflight reports an already-finalized archive as corrupt,
+move that `.npz` aside and repeat the training command.
 
 The command prints JSON metrics and writes the final checkpoint path configured
 under `output.checkpoint`. See `PAPER_SPEC.md` for the equation-to-code mapping
