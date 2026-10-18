@@ -11,6 +11,11 @@ Implement QC:
 
 First benchmark: `cube-triple-play-singletask-task2-v0`.
 
+Before a long benchmark run, `python -m qchunk.preflight` checks the pinned
+benchmark dependencies, JAX backend, environment dimensions, configuration,
+dataset paths, storage, and phase-specific checkpoints. This is an operational
+guard around the experiment and does not alter the algorithm or download data.
+
 ## Notation
 
 | Symbol | Meaning |

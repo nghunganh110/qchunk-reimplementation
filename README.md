@@ -15,6 +15,23 @@ uv run pytest -q
 The benchmark environment versions match the released QC repository:
 OGBench 1.1.2, Gymnasium 1.1.1, and MuJoCo 3.3.1.
 
+Before starting a long run, inspect the local setup without downloading data or
+changing a checkpoint:
+
+```bash
+uv run python -m qchunk.preflight \
+  --config configs/cube_triple.yaml \
+  --phase offline
+```
+
+The command validates package versions, JAX devices, environment creation,
+hyperparameters, local dataset archives, writable disk space, and any checkpoint
+required by the selected phase. A CPU-only setup is reported as a warning; add
+`--require-gpu` when it should make the check fail. Use `--phase online` or
+`--phase evaluation`, optionally with `--checkpoint` or `--resume`, before later
+pipeline stages. `--json` emits a machine-readable report. The process exits
+with status 1 whenever a required check fails.
+
 ## Offline OGBench training
 
 The first configuration targets

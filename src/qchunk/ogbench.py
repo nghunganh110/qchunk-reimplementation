@@ -10,6 +10,8 @@ import ogbench
 
 from qchunk.dataset import TransitionDataset
 
+DEFAULT_DATASET_DIR = Path("~/.ogbench/data")
+
 
 @dataclass(frozen=True)
 class OGBenchBundle:
@@ -57,6 +59,31 @@ def convert_ogbench_dataset(
 def make_ogbench_env(dataset_name: str):
     """Create an OGBench environment without downloading a dataset."""
     return ogbench.make_env_and_datasets(dataset_name, env_only=True)
+
+
+def ogbench_dataset_paths(
+    dataset_name: str,
+    dataset_dir: str | Path | None = None,
+) -> tuple[Path, Path]:
+    """Return the train/validation paths used internally by OGBench.
+
+    OGBench environment names include the data collection policy and, for
+    single-task data, the task number. Its downloaded archive names omit those
+    components. Keeping this conversion here lets preflight inspect local data
+    without invoking OGBench's downloader.
+    """
+    splits = dataset_name.split("-")
+    if "singletask" in splits:
+        position = splits.index("singletask")
+        archive_name = "-".join(splits[:position] + splits[-1:])
+    elif "oraclerep" in splits:
+        archive_name = "-".join(splits[:-2] + splits[-1:])
+    else:
+        archive_name = "-".join(splits[:-2] + splits[-1:])
+
+    root = Path(dataset_dir) if dataset_dir is not None else DEFAULT_DATASET_DIR
+    root = root.expanduser()
+    return root / f"{archive_name}.npz", root / f"{archive_name}-val.npz"
 
 
 def capture_ogbench_env_state(env: Any) -> dict[str, Any]:

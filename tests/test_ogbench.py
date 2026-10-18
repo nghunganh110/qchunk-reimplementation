@@ -10,6 +10,7 @@ from qchunk.ogbench import (
     convert_ogbench_dataset,
     load_ogbench,
     make_ogbench_env,
+    ogbench_dataset_paths,
     restore_ogbench_env_state,
 )
 from qchunk.train_ogbench import load_experiment_config, make_agent_config
@@ -55,6 +56,15 @@ def test_cube_triple_config_matches_environment_dimensions():
 def test_agent_config_rejects_wrong_explicit_action_dimension():
     with pytest.raises(ValueError, match="does not match"):
         make_agent_config({"horizon": 5, "action_dim": 4}, action_dim=5)
+
+
+def test_dataset_paths_match_ogbench_single_task_archive_names(tmp_path):
+    train_path, validation_path = ogbench_dataset_paths(
+        "cube-triple-play-singletask-task2-v0", tmp_path
+    )
+
+    assert train_path == tmp_path / "cube-triple-play-v0.npz"
+    assert validation_path == tmp_path / "cube-triple-play-v0-val.npz"
 
 
 def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_path):
