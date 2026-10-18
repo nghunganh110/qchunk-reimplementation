@@ -25,12 +25,13 @@ uv run python -m qchunk.preflight \
 ```
 
 The command validates package versions, JAX devices, environment creation,
-hyperparameters, local dataset archives, writable disk space, and any checkpoint
-required by the selected phase. A CPU-only setup is reported as a warning; add
-`--require-gpu` when it should make the check fail. Use `--phase online` or
-`--phase evaluation`, optionally with `--checkpoint` or `--resume`, before later
-pipeline stages. `--json` emits a machine-readable report. The process exits
-with status 1 whenever a required check fails.
+hyperparameters, NPZ archive directories, writable disk space, and any checkpoint
+required by the selected phase. This catches interrupted OGBench downloads before
+NumPy attempts to load their large arrays. A CPU-only setup is reported as a
+warning; add `--require-gpu` when it should make the check fail. Use
+`--phase online` or `--phase evaluation`, optionally with `--checkpoint` or
+`--resume`, before later pipeline stages. `--json` emits a machine-readable
+report. The process exits with status 1 whenever a required check fails.
 
 ## Offline OGBench training
 
@@ -52,6 +53,12 @@ uv run python -m qchunk.train_ogbench \
   --config configs/cube_triple.yaml \
   --steps 1
 ```
+
+Downloads are first written as `.npz.tmp` files. Repeating the same command
+resumes an interrupted download with an HTTP range request. A file receives its
+final `.npz` name only after its reported byte count and ZIP directory are valid.
+If preflight reports an already-finalized archive as corrupt, move that `.npz`
+aside and repeat the training command.
 
 The command prints JSON metrics and writes the final checkpoint path configured
 under `output.checkpoint`. See `PAPER_SPEC.md` for the equation-to-code mapping

@@ -1,6 +1,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import yaml
 
 from qchunk.preflight import PreflightCheck, _check_devices, run_preflight
@@ -58,8 +59,13 @@ def patch_machine_checks(monkeypatch):
 def create_dataset_files(tmp_path: Path) -> None:
     dataset_dir = tmp_path / "data"
     dataset_dir.mkdir()
-    (dataset_dir / "cube-triple-play-v0.npz").write_bytes(b"train")
-    (dataset_dir / "cube-triple-play-v0-val.npz").write_bytes(b"validation")
+    arrays = {
+        "observations": np.zeros((2, 3)),
+        "actions": np.zeros((2, 2)),
+        "terminals": np.zeros(2),
+    }
+    np.savez(dataset_dir / "cube-triple-play-v0.npz", **arrays)
+    np.savez(dataset_dir / "cube-triple-play-v0-val.npz", **arrays)
 
 
 def check(report, name: str):
@@ -68,10 +74,15 @@ def check(report, name: str):
 
 def test_offline_preflight_reports_missing_dataset(monkeypatch, tmp_path):
     patch_machine_checks(monkeypatch)
+    dataset_dir = tmp_path / "data"
+    dataset_dir.mkdir()
+    partial_path = dataset_dir / "cube-triple-play-v0.npz.tmp"
+    partial_path.write_bytes(b"partial")
     report = run_preflight(write_config(tmp_path), minimum_free_gib=0)
 
     assert not report.ready
     assert check(report, "dataset").status == "fail"
+    assert check(report, "dataset").details["partial_downloads_bytes"] == {str(partial_path): 7}
     assert check(report, "checkpoint").status == "pass"
     assert report.as_dict()["summary"]["fail"] == 1
 
@@ -96,6 +107,19 @@ def test_online_preflight_requires_input_checkpoint(monkeypatch, tmp_path):
     assert not report.ready
     assert check(report, "checkpoint").status == "fail"
     assert "does not exist" in check(report, "checkpoint").message
+
+
+def test_preflight_rejects_truncated_dataset_archive(monkeypatch, tmp_path):
+    patch_machine_checks(monkeypatch)
+    create_dataset_files(tmp_path)
+    dataset_path = tmp_path / "data" / "cube-triple-play-v0.npz"
+    dataset_path.write_bytes(dataset_path.read_bytes()[:64])
+
+    report = run_preflight(write_config(tmp_path), minimum_free_gib=0)
+
+    assert not report.ready
+    assert check(report, "dataset").status == "fail"
+    assert "incomplete or corrupt" in check(report, "dataset").message
 
 
 def test_cpu_is_warning_unless_gpu_is_required(monkeypatch):

@@ -1,4 +1,8 @@
 import json
+import urllib.error
+import urllib.request
+import warnings
+import zipfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +15,10 @@ import ogbench
 from qchunk.dataset import TransitionDataset
 
 DEFAULT_DATASET_DIR = Path("~/.ogbench/data")
+DATASET_URL = "https://rail.eecs.berkeley.edu/datasets/ogbench"
+REQUIRED_ARCHIVE_MEMBERS = frozenset({"observations.npy", "actions.npy", "terminals.npy"})
+DOWNLOAD_CHUNK_SIZE = 1024 * 1024
+DOWNLOAD_REPORT_INTERVAL = 16 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -58,7 +66,13 @@ def convert_ogbench_dataset(
 
 def make_ogbench_env(dataset_name: str):
     """Create an OGBench environment without downloading a dataset."""
-    return ogbench.make_env_and_datasets(dataset_name, env_only=True)
+    return _make_env_and_datasets(dataset_name, env_only=True)
+
+
+def _make_env_and_datasets(dataset_name: str, **kwargs):
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*Box (low|high)'s precision lowered.*")
+        return ogbench.make_env_and_datasets(dataset_name, **kwargs)
 
 
 def ogbench_dataset_paths(
@@ -84,6 +98,100 @@ def ogbench_dataset_paths(
     root = Path(dataset_dir) if dataset_dir is not None else DEFAULT_DATASET_DIR
     root = root.expanduser()
     return root / f"{archive_name}.npz", root / f"{archive_name}-val.npz"
+
+
+def validate_ogbench_dataset_archive(path: str | Path) -> None:
+    """Validate an OGBench NPZ directory without decompressing its large arrays."""
+    path = Path(path).expanduser()
+    if not path.is_file():
+        raise FileNotFoundError(f"OGBench archive does not exist: {path}")
+    try:
+        with zipfile.ZipFile(path) as archive:
+            members = set(archive.namelist())
+    except zipfile.BadZipFile as error:
+        raise ValueError(
+            f"OGBench archive is incomplete or corrupt: {path}. "
+            "Move or remove it so OGBench can download it again."
+        ) from error
+    missing = REQUIRED_ARCHIVE_MEMBERS - members
+    if missing:
+        raise ValueError(f"OGBench archive {path} is missing members: {sorted(missing)}")
+
+
+def _response_total_size(response: Any, offset: int) -> int | None:
+    content_range = response.headers.get("Content-Range")
+    if content_range is not None and "/" in content_range:
+        total = content_range.rsplit("/", 1)[-1]
+        if total.isdigit():
+            return int(total)
+    content_length = response.headers.get("Content-Length")
+    if content_length is not None and content_length.isdigit():
+        return int(content_length) + (offset if response.status == 206 else 0)
+    return None
+
+
+def _download_archive(url: str, path: Path) -> None:
+    """Download one archive atomically, resuming an interrupted temporary file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = path.with_suffix(f"{path.suffix}.tmp")
+    offset = temporary_path.stat().st_size if temporary_path.exists() else 0
+    headers = {"Range": f"bytes={offset}-"} if offset else {}
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        response_context = urllib.request.urlopen(request)
+    except urllib.error.HTTPError as error:
+        if error.code == 416 and offset:
+            validate_ogbench_dataset_archive(temporary_path)
+            temporary_path.replace(path)
+            return
+        raise
+
+    with response_context as response:
+        status = getattr(response, "status", response.getcode())
+        if offset and status != 206:
+            offset = 0
+        mode = "ab" if offset else "wb"
+        expected_size = _response_total_size(response, offset)
+        downloaded = offset
+        next_report = downloaded + DOWNLOAD_REPORT_INTERVAL
+        action = "Resuming" if offset else "Downloading"
+        print(f"{action} dataset: {url}")
+        with temporary_path.open(mode) as file:
+            while chunk := response.read(DOWNLOAD_CHUNK_SIZE):
+                file.write(chunk)
+                downloaded += len(chunk)
+                if downloaded >= next_report:
+                    if expected_size is None:
+                        print(f"  downloaded {downloaded / 1024**2:.1f} MiB")
+                    else:
+                        print(
+                            f"  downloaded {downloaded / 1024**2:.1f} / "
+                            f"{expected_size / 1024**2:.1f} MiB"
+                        )
+                    next_report += DOWNLOAD_REPORT_INTERVAL
+
+    actual_size = temporary_path.stat().st_size
+    if expected_size is not None and actual_size != expected_size:
+        raise OSError(
+            f"Incomplete download for {path}: received {actual_size} of {expected_size} bytes. "
+            "Run the command again to resume."
+        )
+    validate_ogbench_dataset_archive(temporary_path)
+    temporary_path.replace(path)
+
+
+def download_ogbench_dataset_archives(
+    dataset_name: str,
+    dataset_dir: str | Path | None = None,
+) -> tuple[Path, Path]:
+    """Ensure both OGBench archives exist, using resumable atomic downloads."""
+    paths = ogbench_dataset_paths(dataset_name, dataset_dir)
+    for path in paths:
+        if path.exists():
+            validate_ogbench_dataset_archive(path)
+            continue
+        _download_archive(f"{DATASET_URL}/{path.name}", path)
+    return paths
 
 
 def capture_ogbench_env_state(env: Any) -> dict[str, Any]:
@@ -167,11 +275,19 @@ def load_ogbench(
     action_clip_eps: float | None = 1e-5,
 ) -> OGBenchBundle:
     """Create independent train/eval environments and load regular datasets."""
+    archive_paths = download_ogbench_dataset_archives(dataset_name, dataset_dir)
+
     kwargs: dict[str, Any] = {"compact_dataset": False}
     if dataset_dir is not None:
         kwargs["dataset_dir"] = str(Path(dataset_dir).expanduser())
 
-    env, train_data, validation_data = ogbench.make_env_and_datasets(dataset_name, **kwargs)
+    try:
+        env, train_data, validation_data = _make_env_and_datasets(dataset_name, **kwargs)
+    except zipfile.BadZipFile as error:
+        raise ValueError(
+            "An OGBench dataset download produced an incomplete or corrupt NPZ archive. "
+            f"Inspect these files and download them again: {archive_paths}"
+        ) from error
     eval_env = make_ogbench_env(dataset_name)
     try:
         if len(env.observation_space.shape) != 1:

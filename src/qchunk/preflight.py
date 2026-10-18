@@ -15,16 +15,15 @@ import numpy as np
 from qchunk.checkpoint import load_checkpoint, load_training_checkpoint
 from qchunk.evaluation import EvaluationConfig
 from qchunk.offline import OfflineTrainingConfig
+from qchunk.ogbench import (
+    make_ogbench_env,
+    ogbench_dataset_paths,
+    validate_ogbench_dataset_archive,
+)
 from qchunk.online import OnlineTrainingConfig
 from qchunk.online_checkpoint import load_online_checkpoint
+from qchunk.train_ogbench import load_experiment_config, make_agent_config
 from qchunk.training import QCTrainState
-
-with warnings.catch_warnings():
-    # Importing OGBench registers environments whose float64 bounds are cast to
-    # float32. The warning is expected and unrelated to preflight readiness.
-    warnings.filterwarnings("ignore", message=".*Box (low|high)'s precision lowered.*")
-    from qchunk.ogbench import make_ogbench_env, ogbench_dataset_paths
-    from qchunk.train_ogbench import load_experiment_config, make_agent_config
 
 Status = Literal["pass", "warning", "fail"]
 Phase = Literal["offline", "online", "evaluation"]
@@ -230,18 +229,37 @@ def _check_dataset(experiment: dict[str, Any], phase: Phase) -> PreflightCheck:
     }
     if missing:
         details["missing"] = missing
+        partial_downloads = {
+            str(path.with_suffix(f"{path.suffix}.tmp")): path.with_suffix(f"{path.suffix}.tmp")
+            .stat()
+            .st_size
+            for path in paths
+            if path.with_suffix(f"{path.suffix}.tmp").is_file()
+        }
+        if partial_downloads:
+            details["partial_downloads_bytes"] = partial_downloads
         return PreflightCheck(
             "dataset",
             "fail",
-            "OGBench dataset files are missing. The training command downloads them on first use.",
+            "OGBench dataset files are missing. The training command downloads or resumes them.",
             details,
         )
     empty = [str(path) for path in paths if path.stat().st_size == 0]
     if empty:
         details["empty"] = empty
         return PreflightCheck("dataset", "fail", "Dataset files are empty.", details)
+    try:
+        for path in paths:
+            validate_ogbench_dataset_archive(path)
+    except (OSError, ValueError) as error:
+        return PreflightCheck("dataset", "fail", str(error), details)
     details["sizes_bytes"] = {str(path): path.stat().st_size for path in paths}
-    return PreflightCheck("dataset", "pass", "Training and validation archives exist.", details)
+    return PreflightCheck(
+        "dataset",
+        "pass",
+        "Training and validation archives have valid NPZ directories.",
+        details,
+    )
 
 
 def _nearest_existing_parent(path: Path) -> Path:

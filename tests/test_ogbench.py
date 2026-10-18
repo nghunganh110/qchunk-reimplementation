@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -6,12 +7,14 @@ import pytest
 
 from qchunk.config import QCConfig
 from qchunk.ogbench import (
+    _download_archive,
     capture_ogbench_env_state,
     convert_ogbench_dataset,
     load_ogbench,
     make_ogbench_env,
     ogbench_dataset_paths,
     restore_ogbench_env_state,
+    validate_ogbench_dataset_archive,
 )
 from qchunk.train_ogbench import load_experiment_config, make_agent_config
 
@@ -67,6 +70,67 @@ def test_dataset_paths_match_ogbench_single_task_archive_names(tmp_path):
     assert validation_path == tmp_path / "cube-triple-play-v0-val.npz"
 
 
+def test_dataset_archive_validation_checks_zip_directory_and_members(tmp_path):
+    valid_path = tmp_path / "valid.npz"
+    np.savez(
+        valid_path,
+        observations=np.zeros((2, 3)),
+        actions=np.zeros((2, 1)),
+        terminals=np.zeros(2),
+    )
+    validate_ogbench_dataset_archive(valid_path)
+
+    truncated_path = tmp_path / "truncated.npz"
+    truncated_path.write_bytes(valid_path.read_bytes()[:64])
+    with pytest.raises(ValueError, match="incomplete or corrupt"):
+        validate_ogbench_dataset_archive(truncated_path)
+
+
+def test_dataset_archive_validation_checks_required_members(tmp_path):
+    path = tmp_path / "missing.npz"
+    np.savez(path, observations=np.zeros((2, 3)))
+
+    with pytest.raises(ValueError, match="actions.npy"):
+        validate_ogbench_dataset_archive(path)
+
+
+def test_archive_download_resumes_temporary_file(monkeypatch, tmp_path):
+    archive_buffer = io.BytesIO()
+    np.savez(
+        archive_buffer,
+        observations=np.zeros((2, 3)),
+        actions=np.zeros((2, 1)),
+        terminals=np.zeros(2),
+    )
+    content = archive_buffer.getvalue()
+    path = tmp_path / "dataset.npz"
+    temporary_path = tmp_path / "dataset.npz.tmp"
+    offset = len(content) // 2
+    temporary_path.write_bytes(content[:offset])
+
+    class FakeResponse(io.BytesIO):
+        def __init__(self, value):
+            super().__init__(value)
+            self.status = 206
+            self.headers = {
+                "Content-Range": f"bytes {offset}-{len(content) - 1}/{len(content)}",
+                "Content-Length": str(len(content) - offset),
+            }
+
+        def getcode(self):
+            return self.status
+
+    def fake_urlopen(request):
+        assert request.get_header("Range") == f"bytes={offset}-"
+        return FakeResponse(content[offset:])
+
+    monkeypatch.setattr("qchunk.ogbench.urllib.request.urlopen", fake_urlopen)
+    _download_archive("https://example.test/dataset.npz", path)
+
+    assert path.read_bytes() == content
+    assert not temporary_path.exists()
+
+
 def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_path):
     class FakeEnv:
         observation_space = SimpleNamespace(shape=(2,))
@@ -86,6 +150,10 @@ def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_pat
             return eval_env
         return train_env, raw, raw
 
+    monkeypatch.setattr(
+        "qchunk.ogbench.download_ogbench_dataset_archives",
+        lambda dataset_name, dataset_dir: ogbench_dataset_paths(dataset_name, dataset_dir),
+    )
     monkeypatch.setattr("qchunk.ogbench.ogbench.make_env_and_datasets", fake_make)
     bundle = load_ogbench("example-v0", dataset_dir=tmp_path)
 
