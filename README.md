@@ -198,3 +198,29 @@ to show logs after the local terminal disconnects. The embedded cost table is a
 snapshot dated 2026-10-20; compare it with Modal's pricing page before future
 runs. The projection covers offline learner updates only. Benchmark online
 fine-tuning separately before spending the remaining balance.
+
+Evaluate the final offline checkpoint directly from the Modal Volume. Start
+with one episode to include JAX compilation and verify the environment:
+
+```bash
+uv run modal run modal_qchunk.py \
+  --mode evaluation \
+  --gpu A10 \
+  --evaluation-episodes 1 \
+  --budget-usd 30 \
+  --max-spend-usd 0.25
+```
+
+Then run the configured 50 episodes with a one-dollar resource ceiling:
+
+```bash
+uv run modal run modal_qchunk.py \
+  --mode evaluation \
+  --gpu A10 \
+  --evaluation-episodes 50 \
+  --budget-usd 30 \
+  --max-spend-usd 1
+```
+
+The final JSON contains `success_rate`, `mean_return`, and `mean_length`, and the
+same metrics are appended to `/vol/runs/cube_triple/metrics.jsonl`.
