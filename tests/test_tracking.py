@@ -1,7 +1,7 @@
 import csv
 import json
 
-from qchunk.tracking import MetricLogger, record_manifest_event
+from qchunk.tracking import MetricLogger, _git_metadata, record_manifest_event
 
 
 def test_metric_logger_writes_jsonl_and_long_form_csv(tmp_path):
@@ -71,3 +71,18 @@ def test_manifest_records_runtime_config_and_resume_event(tmp_path, monkeypatch)
     assert manifest["events"][0]["config"] == config
     assert manifest["events"][1]["resume_step"] == 5
     assert manifest["events"][1]["resume_checkpoint"] == "step_5.msgpack"
+
+
+def test_git_metadata_uses_embedded_commit_when_git_is_unavailable(tmp_path, monkeypatch):
+    monkeypatch.setenv("QCHUNK_SOURCE_COMMIT", "modal-image-commit")
+
+    def missing_git(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr("qchunk.tracking.subprocess.run", missing_git)
+
+    assert _git_metadata(tmp_path) == {
+        "commit": "modal-image-commit",
+        "branch": None,
+        "dirty": None,
+    }

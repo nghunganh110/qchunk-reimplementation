@@ -184,13 +184,16 @@ def collect_runtime_metadata(cwd: str | Path) -> dict[str, Any]:
 
 def _git_metadata(cwd: str | Path) -> dict[str, Any]:
     def run(*args: str) -> str | None:
-        result = subprocess.run(
-            ("git", *args),
-            cwd=cwd,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        try:
+            result = subprocess.run(
+                ("git", *args),
+                cwd=cwd,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        except OSError:
+            return None
         return result.stdout.strip() if result.returncode == 0 else None
 
     status = run("status", "--porcelain")
