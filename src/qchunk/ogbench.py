@@ -333,7 +333,14 @@ def restore_ogbench_env_state(env: Any, state: Mapping[str, Any]) -> None:
     env.reset()
     unwrapped = env.unwrapped
     specification = mujoco.mjtState.mjSTATE_FULLPHYSICS
-    physics_state = np.asarray(state["physics_state"], dtype=np.float64)
+    # Flax msgpack may restore NumPy arrays backed by an immutable buffer.
+    # MuJoCo's Python binding requires a writable, C-contiguous float64 array.
+    physics_state = np.array(
+        state["physics_state"],
+        dtype=np.float64,
+        order="C",
+        copy=True,
+    )
     expected_size = mujoco.mj_stateSize(unwrapped.model, specification)
     if physics_state.shape != (expected_size,):
         raise ValueError("MuJoCo physics state has an incompatible shape")

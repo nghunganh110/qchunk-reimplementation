@@ -315,6 +315,7 @@ def test_cube_environment_state_round_trip():
         env.reset(seed=123)
         env.step(np.zeros(5, dtype=np.float32))
         snapshot = capture_ogbench_env_state(env)
+        snapshot["physics_state"].setflags(write=False)
         actions = [
             np.array([0.1, -0.1, 0.05, 0.2, -0.2], dtype=np.float32),
             np.array([-0.05, 0.1, 0.0, -0.1, 0.2], dtype=np.float32),
