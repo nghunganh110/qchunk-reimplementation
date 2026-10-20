@@ -1,5 +1,6 @@
 import argparse
 import json
+from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
 
@@ -33,6 +34,7 @@ def run(
     start_training_override: int | None = None,
     evaluation_episodes_override: int | None = None,
     resume_path: str | Path | None = None,
+    on_checkpoint_saved: Callable[[Path], None] | None = None,
 ) -> Path:
     experiment = load_experiment_config(config_path)
     if not isinstance(experiment.get("online"), dict):
@@ -113,6 +115,12 @@ def run(
             )
         )
 
+        def save_progress(progress):
+            path = save_online_checkpoint(resume_output_path, progress)
+            if on_checkpoint_saved is not None:
+                on_checkpoint_saved(path)
+            return path
+
         result = train_online(
             state,
             bundle.env,
@@ -125,9 +133,9 @@ def run(
             resume=resume,
             capture_environment_state=capture_ogbench_env_state,
             restore_environment_state=restore_ogbench_env_state,
-            on_checkpoint=lambda progress: save_online_checkpoint(resume_output_path, progress),
+            on_checkpoint=save_progress,
         )
-        save_online_checkpoint(resume_output_path, result.progress)
+        save_progress(result.progress)
         output_path = Path(
             experiment["output"].get(
                 "online_checkpoint", offline_output_path.with_name("online_final.msgpack")

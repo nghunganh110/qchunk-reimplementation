@@ -65,7 +65,13 @@ volume = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
 app = modal.App(APP_NAME)
 
 
-def _runtime_config(run_name: str, target_steps: int) -> Path:
+def _runtime_config(
+    run_name: str,
+    target_steps: int,
+    *,
+    online_target_steps: int | None = None,
+    evaluation_episodes: int | None = None,
+) -> Path:
     import yaml
 
     from qchunk.train_ogbench import load_experiment_config
@@ -73,6 +79,10 @@ def _runtime_config(run_name: str, target_steps: int) -> Path:
     experiment = load_experiment_config(REMOTE_CONFIG)
     experiment["environment"]["dataset_dir"] = str(VOLUME_ROOT / "data")
     experiment["offline"]["steps"] = target_steps
+    if online_target_steps is not None:
+        experiment["online"]["steps"] = online_target_steps
+    if evaluation_episodes is not None:
+        experiment["evaluation"]["episodes"] = evaluation_episodes
     run_dir = VOLUME_ROOT / "runs" / run_name
     experiment["output"] = {
         "run_dir": str(run_dir),
@@ -133,7 +143,12 @@ def prepare_data() -> dict[str, object]:
     memory=MEMORY_MIB,
     timeout=24 * 60 * 60,
 )
-def run_gpu(mode: str, steps: int, gpu: str) -> dict[str, object]:
+def run_gpu(
+    mode: str,
+    steps: int,
+    gpu: str,
+    evaluation_episodes: int = 50,
+) -> dict[str, object]:
     """Benchmark, train, or evaluate the QC agent on a GPU worker."""
     jax_details = _assert_gpu()
     resources = ModalResources(gpu=gpu, cpu_cores=CPU_CORES, memory_gib=MEMORY_MIB / 1024)
@@ -144,8 +159,10 @@ def run_gpu(mode: str, steps: int, gpu: str) -> dict[str, object]:
         result = _train_offline(steps, resources)
     elif mode == "evaluation":
         result = _evaluate_offline(steps, resources)
+    elif mode == "online":
+        result = _train_online(steps, evaluation_episodes, resources)
     else:
-        raise ValueError("mode must be 'benchmark', 'offline', or 'evaluation'")
+        raise ValueError("mode must be 'benchmark', 'offline', 'online', or 'evaluation'")
     result["jax"] = jax_details
     result["gpu"] = gpu
     result["price_snapshot_date"] = PRICE_SNAPSHOT_DATE
@@ -294,19 +311,117 @@ def _evaluate_offline(episodes: int, resources: ModalResources) -> dict[str, obj
     }
 
 
+def _online_resume_step(path: Path) -> int | None:
+    from flax import serialization
+
+    metadata_path = path / "metadata.msgpack"
+    if not metadata_path.is_file():
+        return None
+    payload = serialization.msgpack_restore(metadata_path.read_bytes())
+    try:
+        return int(payload["online"]["environment_steps"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"invalid online resume checkpoint metadata: {metadata_path}") from error
+
+
+def _phase_metrics(run_dir: Path, phase: str, step: int) -> dict[str, float] | None:
+    from qchunk.tracking import MetricLogger
+
+    records = MetricLogger(run_dir).read_records()
+    for record in reversed(records):
+        if record["phase"] == phase and int(record["step"]) == step:
+            return {name: float(value) for name, value in record["metrics"].items()}
+    return None
+
+
+def _train_online(
+    target_steps: int,
+    evaluation_episodes: int,
+    resources: ModalResources,
+) -> dict[str, object]:
+    from qchunk.train_online_ogbench import run
+
+    if target_steps <= 0:
+        raise ValueError("online target steps must be positive")
+    if evaluation_episodes <= 0:
+        raise ValueError("evaluation episodes must be positive")
+
+    run_name = "cube_triple"
+    run_dir = VOLUME_ROOT / "runs" / run_name
+    offline_checkpoint = run_dir / "offline_final.msgpack"
+    if not offline_checkpoint.is_file():
+        raise FileNotFoundError(f"offline checkpoint does not exist: {offline_checkpoint}")
+
+    resume_path = run_dir / "online_resume"
+    resume_step = _online_resume_step(resume_path)
+    if resume_step is not None and resume_step >= target_steps:
+        raise ValueError(
+            f"online checkpoint is already at step {resume_step}, which is not below "
+            f"the requested target {target_steps}"
+        )
+
+    config_path = _runtime_config(
+        run_name,
+        DEFAULT_TARGET_STEPS,
+        online_target_steps=target_steps,
+        evaluation_episodes=evaluation_episodes,
+    )
+    started = time.monotonic()
+    try:
+        checkpoint_path = run(
+            config_path,
+            checkpoint_path=offline_checkpoint,
+            steps_override=target_steps,
+            evaluation_episodes_override=evaluation_episodes,
+            resume_path=resume_path if resume_step is not None else None,
+            on_checkpoint_saved=lambda _path: volume.commit(),
+        )
+    finally:
+        volume.commit()
+    elapsed = time.monotonic() - started
+    initial_step = 0 if resume_step is None else resume_step
+    completed_steps = target_steps - initial_step
+    seconds_per_step = elapsed / completed_steps
+    projected_seconds = seconds_per_step * DEFAULT_TARGET_STEPS
+    return {
+        "mode": "online",
+        "target_steps": target_steps,
+        "initial_step": initial_step,
+        "completed_steps": completed_steps,
+        "evaluation_episodes": evaluation_episodes,
+        "resumed_from": None if resume_step is None else str(resume_path),
+        "checkpoint": str(checkpoint_path),
+        "resume_checkpoint": str(resume_path),
+        "training_metrics": _phase_metrics(run_dir, "online", target_steps),
+        "evaluation_metrics": _phase_metrics(run_dir, "online_evaluation", target_steps),
+        "elapsed_seconds": elapsed,
+        "seconds_per_environment_step": seconds_per_step,
+        "actual_cost_estimate_usd": estimate_cost(resources, elapsed),
+        "projected_million_step_hours_from_pilot": projected_seconds / 3600.0,
+        "projected_million_step_cost_usd_from_pilot": estimate_cost(
+            resources, projected_seconds
+        ),
+        "estimated_usd_per_hour": resources.usd_per_hour,
+        "projection_scope": (
+            "linear pilot extrapolation including pilot startup, final evaluation, and checkpoint I/O"
+        ),
+    }
+
+
 @app.local_entrypoint()
 def main(
     mode: str = "benchmark",
     gpu: str = "A10",
     benchmark_steps: int = DEFAULT_BENCHMARK_STEPS,
     target_steps: int = DEFAULT_TARGET_STEPS,
+    online_target_steps: int = DEFAULT_TARGET_STEPS,
     evaluation_episodes: int = 50,
     budget_usd: float = DEFAULT_BUDGET_USD,
     max_spend_usd: float = DEFAULT_MAX_SPEND_USD,
 ) -> None:
     """Prepare data, then benchmark, train, or evaluate with a cost cap."""
-    if mode not in {"prepare", "benchmark", "offline", "evaluation"}:
-        raise ValueError("mode must be prepare, benchmark, offline, or evaluation")
+    if mode not in {"prepare", "benchmark", "offline", "online", "evaluation"}:
+        raise ValueError("mode must be prepare, benchmark, offline, online, or evaluation")
     if budget_usd <= 0:
         raise ValueError("budget_usd must be positive")
     if not 0 < max_spend_usd <= budget_usd:
@@ -326,7 +441,7 @@ def main(
             sort_keys=True,
         )
     )
-    if mode in {"prepare", "benchmark", "offline"}:
+    if mode in {"prepare", "benchmark", "offline", "online"}:
         prepare_data.remote()
     if mode == "prepare":
         return
@@ -345,7 +460,7 @@ def main(
         )
         call = run_gpu.with_options(gpu=gpu, timeout=timeout).spawn("offline", target_steps, gpu)
         result = call.get()
-    else:
+    elif mode == "evaluation":
         timeout = budget_timeout_seconds(resources, max_spend_usd)
         print(
             f"Evaluating {evaluation_episodes} episodes for up to {timeout / 60:.1f} minutes; "
@@ -355,4 +470,16 @@ def main(
         result = run_gpu.with_options(gpu=gpu, timeout=timeout).remote(
             "evaluation", evaluation_episodes, gpu
         )
+    else:
+        timeout = budget_timeout_seconds(resources, max_spend_usd)
+        print(
+            f"Fine-tuning online toward step {online_target_steps} with "
+            f"{evaluation_episodes} evaluation episode(s) for up to {timeout / 3600:.2f} hours; "
+            f"the configured resource ceiling is ${estimate_cost(resources, timeout):.2f}.",
+            flush=True,
+        )
+        call = run_gpu.with_options(gpu=gpu, timeout=timeout).spawn(
+            "online", online_target_steps, gpu, evaluation_episodes
+        )
+        result = call.get()
     print(json.dumps(result, indent=2, sort_keys=True))

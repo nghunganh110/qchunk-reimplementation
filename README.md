@@ -224,3 +224,38 @@ uv run modal run modal_qchunk.py \
 
 The final JSON contains `success_rate`, `mean_return`, and `mean_length`, and the
 same metrics are appended to `/vol/runs/cube_triple/metrics.jsonl`.
+
+Before the million-step online run, measure the combined environment, learner,
+evaluation, and checkpoint cost with a 10,000-step pilot. This runs one final
+evaluation episode and limits the Modal resource estimate to one dollar:
+
+```bash
+uv run modal run modal_qchunk.py \
+  --mode online \
+  --gpu A10 \
+  --online-target-steps 10000 \
+  --evaluation-episodes 1 \
+  --budget-usd 30 \
+  --max-spend-usd 1
+```
+
+The pilot writes a resumable checkpoint directory to
+`/vol/runs/cube_triple/online_resume` and a model-only checkpoint to
+`/vol/runs/cube_triple/online_final.msgpack`. Inspect
+`projected_million_step_cost_usd_from_pilot` before continuing. The target is a
+total environment-step count, so a later run toward one million automatically
+resumes from step 10,000 instead of repeating it:
+
+```bash
+uv run modal run --detach modal_qchunk.py \
+  --mode online \
+  --gpu A10 \
+  --online-target-steps 1000000 \
+  --evaluation-episodes 50 \
+  --budget-usd 30 \
+  --max-spend-usd 8
+```
+
+Online training commits the Volume after every 50,000-step resume checkpoint
+and at normal completion. Evaluations run every 100,000 environment steps and
+once at the final target step.
