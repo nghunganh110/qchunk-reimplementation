@@ -1,6 +1,7 @@
 import csv
 import importlib.metadata
 import json
+import os
 import platform
 import socket
 import subprocess
@@ -193,8 +194,9 @@ def _git_metadata(cwd: str | Path) -> dict[str, Any]:
         return result.stdout.strip() if result.returncode == 0 else None
 
     status = run("status", "--porcelain")
+    commit = run("rev-parse", "HEAD")
     return {
-        "commit": run("rev-parse", "HEAD"),
+        "commit": commit or os.environ.get("QCHUNK_SOURCE_COMMIT"),
         "branch": run("branch", "--show-current"),
         "dirty": None if status is None else bool(status),
     }

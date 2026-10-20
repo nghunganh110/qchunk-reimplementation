@@ -154,3 +154,47 @@ uv run python -m qchunk.evaluate_ogbench \
 
 At each chunk boundary, evaluation generates one best-of-N chunk and executes
 its actions open-loop until all $H$ actions are used or the episode terminates.
+
+## Modal GPU run
+
+The repository includes a cost-capped Modal launcher. Install the locked
+development dependencies and authenticate once:
+
+```bash
+uv sync --dev
+uv run modal setup
+uv run modal token info
+```
+
+Start with an A10 benchmark. It downloads and validates OGBench data on CPU,
+stores it in the `qchunk-experiments` Modal Volume, warms up JAX compilation,
+then times 2,000 learner updates:
+
+```bash
+uv run modal run modal_qchunk.py \
+  --mode benchmark \
+  --gpu A10 \
+  --benchmark-steps 2000
+```
+
+Inspect `projected_offline_hours` and `projected_offline_cost_usd` before the
+full run. The calibration on 2026-10-20 measured 88.63 updates/second on an A10,
+projecting 3.13 hours and $4.85 for one million offline updates. The following
+command allows roughly 65% headroom while limiting the recorded GPU, 4-core CPU,
+and 32 GiB memory list prices to $8:
+
+```bash
+uv run modal run --detach modal_qchunk.py \
+  --mode offline \
+  --gpu A10 \
+  --budget-usd 30 \
+  --max-spend-usd 8
+```
+
+The full job resumes the newest checkpoint in
+`/vol/runs/cube_triple`, writes a checkpoint every 50,000 updates, and persists
+data, metrics, and checkpoints in the same Volume. Modal's dashboard continues
+to show logs after the local terminal disconnects. The embedded cost table is a
+snapshot dated 2026-10-20; compare it with Modal's pricing page before future
+runs. The projection covers offline learner updates only. Benchmark online
+fine-tuning separately before spending the remaining balance.
