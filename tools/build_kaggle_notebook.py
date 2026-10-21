@@ -67,7 +67,7 @@ Kaggle có thể cảnh báo xung đột với `kaggle-environments`, `dopamine-
 `moviepy`. Các package đó không được dùng trong thực nghiệm này; cảnh báo không làm
 hỏng Q-chunking.
 
-`benchmark` chỉ đo thử 2.000 update và **không** ghi đè checkpoint chính.
+`benchmark` warm-up JAX trước, sau đó đo 2.000 update và **không** ghi đè checkpoint chính.
 """
         ),
         _code(
@@ -311,14 +311,19 @@ if MODE in {"benchmark", "offline"}:
     if resume is not None:
         preflight.extend(["--resume", resume])
     run_command(preflight)
-    steps = BENCHMARK_STEPS if MODE == "benchmark" else OFFLINE_STEPS
-    command = ["-m", "qchunk.train_ogbench", "--config", RUNTIME_CONFIG, "--steps", steps]
-    if resume is not None:
-        command.extend(["--resume", resume])
-    elapsed = run_command(command)
     if MODE == "benchmark":
-        projected_hours = elapsed / BENCHMARK_STEPS * OFFLINE_STEPS / 3600
-        print(f"Ước lượng bảo thủ cho {OFFLINE_STEPS:,} update: {projected_hours:.2f} giờ")
+        run_command([
+            "-m", "qchunk.benchmark_ogbench", "--config", RUNTIME_CONFIG,
+            "--steps", BENCHMARK_STEPS,
+        ])
+    else:
+        command = [
+            "-m", "qchunk.train_ogbench", "--config", RUNTIME_CONFIG,
+            "--steps", OFFLINE_STEPS,
+        ]
+        if resume is not None:
+            command.extend(["--resume", resume])
+        run_command(command)
 
 elif MODE == "online":
     offline_checkpoint = RUN_DIR / "offline_final.msgpack"

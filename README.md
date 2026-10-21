@@ -296,7 +296,7 @@ self-contained notebook for Kaggle. It embeds the current package source, so it
 does not require a public Git repository. In Kaggle, enable a GPU and Internet
 before running it. The default experiment is the paper's sparse-reward
 `puzzle-3x3-play-singletask-task4-v0` configuration, and the default mode is a
-2,000-update benchmark.
+2,000-update benchmark measured after a one-update JAX warm-up.
 
 Run long phases separately and save a Kaggle Version after each one. Attach the
 previous Version's output to the next notebook and set `PREVIOUS_RUN_DIR` to
