@@ -17,7 +17,11 @@ def run(
     episodes_override: int | None = None,
 ) -> dict[str, float]:
     experiment = load_experiment_config(config_path)
-    env = make_ogbench_env(experiment["environment"]["name"])
+    environment = experiment["environment"]
+    env = make_ogbench_env(
+        environment["name"],
+        sparse_reward=bool(environment.get("sparse_reward", False)),
+    )
     try:
         agent_config = make_agent_config(experiment["agent"], env.action_space.shape[0])
         template = QCTrainState.create(

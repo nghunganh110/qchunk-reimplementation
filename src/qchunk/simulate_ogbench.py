@@ -19,8 +19,13 @@ def run(
     fps: int = 10,
 ) -> dict[str, float | int | str]:
     experiment = load_experiment_config(config_path)
-    environment_name = experiment["environment"]["name"]
-    env = make_ogbench_env(environment_name, render_mode="rgb_array")
+    environment = experiment["environment"]
+    environment_name = environment["name"]
+    env = make_ogbench_env(
+        environment_name,
+        sparse_reward=bool(environment.get("sparse_reward", False)),
+        render_mode="rgb_array",
+    )
     try:
         agent_config = make_agent_config(experiment["agent"], env.action_space.shape[0])
         template = QCTrainState.create(

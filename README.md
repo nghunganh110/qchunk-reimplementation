@@ -288,3 +288,25 @@ uv run modal volume get \
 
 Change `--simulation-seed` to record another episode. A single seed can fail
 even when the 50-episode success rate is high.
+
+## Kaggle GPU notebook
+
+[`notebooks/qchunk_kaggle.ipynb`](notebooks/qchunk_kaggle.ipynb) is a
+self-contained notebook for Kaggle. It embeds the current package source, so it
+does not require a public Git repository. In Kaggle, enable a GPU and Internet
+before running it. The default experiment is the paper's sparse-reward
+`puzzle-3x3-play-singletask-task4-v0` configuration, and the default mode is a
+2,000-update benchmark.
+
+Run long phases separately and save a Kaggle Version after each one. Attach the
+previous Version's output to the next notebook and set `PREVIOUS_RUN_DIR` to
+resume from its checkpoints. Kaggle keeps files under `/kaggle/working`, while
+the notebook also produces a smaller `qchunk_*.zip` containing final model
+checkpoints, metrics, configuration, and simulations.
+
+After changing package source or experiment configs, regenerate the embedded
+notebook with:
+
+```bash
+uv run python tools/build_kaggle_notebook.py
+```

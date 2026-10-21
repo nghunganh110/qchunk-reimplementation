@@ -4,6 +4,7 @@ import zipfile
 from pathlib import Path
 from types import SimpleNamespace
 
+import gymnasium
 import numpy as np
 import pytest
 
@@ -48,6 +49,15 @@ def test_conversion_requires_regular_noncompact_dataset():
         convert_ogbench_dataset(raw)
 
 
+def test_sparse_conversion_matches_paper_reward_transform():
+    raw = make_raw_dataset()
+    raw["rewards"] = np.array([-2.0, -0.25, 0.0, 1.0, 0.0, -3.0])
+
+    dataset = convert_ogbench_dataset(raw, sparse_reward=True)
+
+    np.testing.assert_array_equal(dataset.data["rewards"], [-1, -1, 0, -1, 0, -1])
+
+
 def test_cube_triple_config_matches_environment_dimensions():
     path = Path(__file__).parents[1] / "configs" / "cube_triple.yaml"
     experiment = load_experiment_config(path)
@@ -56,6 +66,17 @@ def test_cube_triple_config_matches_environment_dimensions():
     assert agent.horizon == 5
     assert agent.action_chunk_dim == 25
     assert agent.num_candidates == 32
+
+
+def test_puzzle_config_matches_paper_sparse_task():
+    path = Path(__file__).parents[1] / "configs" / "puzzle_3x3.yaml"
+    experiment = load_experiment_config(path)
+    agent = make_agent_config(experiment["agent"], action_dim=5)
+
+    assert experiment["environment"]["name"] == "puzzle-3x3-play-singletask-task4-v0"
+    assert experiment["environment"]["sparse_reward"] is True
+    assert agent.horizon == 5
+    assert agent.num_candidates == 64
 
 
 def test_agent_config_rejects_wrong_explicit_action_dimension():
@@ -269,7 +290,7 @@ def test_archive_download_rejects_misaligned_range(monkeypatch, tmp_path):
 
 
 def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_path):
-    class FakeEnv:
+    class FakeEnv(gymnasium.Env):
         observation_space = SimpleNamespace(shape=(2,))
         action_space = SimpleNamespace(shape=(1,))
 
@@ -306,15 +327,57 @@ def test_loader_requests_regular_data_and_separate_eval_env(monkeypatch, tmp_pat
     ]
 
 
+def test_loader_applies_sparse_rewards_to_data_and_environments(monkeypatch, tmp_path):
+    class FakeEnv(gymnasium.Env):
+        observation_space = SimpleNamespace(shape=(2,))
+        action_space = SimpleNamespace(shape=(1,))
+
+        def reset(self, **kwargs):
+            return np.zeros(2, dtype=np.float32), {}
+
+        def step(self, action):
+            del action
+            return np.zeros(2, dtype=np.float32), -0.25, False, False, {}
+
+        def close(self):
+            pass
+
+    raw = make_raw_dataset()
+    monkeypatch.setattr(
+        "qchunk.ogbench.download_ogbench_dataset_archives",
+        lambda dataset_name, dataset_dir: ogbench_dataset_paths(dataset_name, dataset_dir),
+    )
+    monkeypatch.setattr(
+        "qchunk.ogbench.ogbench.make_env_and_datasets",
+        lambda dataset_name, **kwargs: (
+            FakeEnv() if kwargs.get("env_only") else (FakeEnv(), raw, raw)
+        ),
+    )
+
+    bundle = load_ogbench("example-v0", dataset_dir=tmp_path, sparse_reward=True)
+    try:
+        np.testing.assert_array_equal(bundle.train_dataset.data["rewards"], [-1, -1, 0, -1, -1, -1])
+        _, reward, *_ = bundle.env.step(np.zeros(1, dtype=np.float32))
+        assert reward == -1.0
+    finally:
+        bundle.env.close()
+        bundle.eval_env.close()
+
+
 @pytest.mark.filterwarnings("ignore:.*Wayland.*")
 @pytest.mark.filterwarnings("ignore:.*Box low's precision lowered.*")
 @pytest.mark.filterwarnings("ignore:.*Box high's precision lowered.*")
-def test_cube_environment_state_round_trip():
-    env = make_ogbench_env("cube-triple-play-singletask-task2-v0")
+@pytest.mark.parametrize("sparse_reward", [False, True])
+def test_cube_environment_state_round_trip(sparse_reward):
+    env = make_ogbench_env(
+        "cube-triple-play-singletask-task2-v0",
+        sparse_reward=sparse_reward,
+    )
     try:
         env.reset(seed=123)
         env.step(np.zeros(5, dtype=np.float32))
         snapshot = capture_ogbench_env_state(env)
+        assert snapshot["elapsed_steps"] == 1
         snapshot["physics_state"].setflags(write=False)
         actions = [
             np.array([0.1, -0.1, 0.05, 0.2, -0.2], dtype=np.float32),

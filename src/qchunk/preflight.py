@@ -128,7 +128,10 @@ def _check_environment(experiment: dict[str, Any]) -> tuple[PreflightCheck, int 
             # MuJoCo can run headlessly even though GLFW cannot connect to a display.
             warnings.filterwarnings("ignore", message=".*Wayland: Failed to connect to display.*")
             warnings.filterwarnings("ignore", message=".*Box (low|high)'s precision lowered.*")
-            env = make_ogbench_env(dataset_name)
+            env = make_ogbench_env(
+                dataset_name,
+                sparse_reward=bool(environment.get("sparse_reward", False)),
+            )
             observation, _ = env.reset(seed=int(experiment.get("seed", 0)))
             observation_shape = tuple(env.observation_space.shape)
             action_shape = tuple(env.action_space.shape)

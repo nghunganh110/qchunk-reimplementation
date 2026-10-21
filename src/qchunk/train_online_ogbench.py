@@ -45,6 +45,7 @@ def run(
         environment_config["name"],
         dataset_dir=environment_config.get("dataset_dir"),
         action_clip_eps=environment_config.get("action_clip_eps", 1e-5),
+        sparse_reward=bool(environment_config.get("sparse_reward", False)),
     )
     try:
         agent_config = make_agent_config(experiment["agent"], bundle.env.action_space.shape[0])

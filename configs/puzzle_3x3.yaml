@@ -1,0 +1,51 @@
+seed: 0
+
+environment:
+  name: puzzle-3x3-play-singletask-task4-v0
+  dataset_dir: null
+  action_clip_eps: 1.0e-5
+  sparse_reward: true
+
+agent:
+  horizon: 5
+  hidden_dims: [512, 512, 512, 512]
+  num_critics: 2
+  num_candidates: 64
+  num_flow_steps: 10
+  discount: 0.99
+  tau: 0.005
+  learning_rate: 3.0e-4
+  q_aggregation: mean
+  flow_layer_norm: false
+  critic_layer_norm: true
+
+offline:
+  steps: 1000000
+  batch_size: 256
+  log_interval: 5000
+  dataset_seed: 0
+  checkpoint_interval: 50000
+
+online:
+  steps: 1000000
+  buffer_capacity: 2000000
+  batch_size: 256
+  start_training: 5000
+  updates_per_step: 1
+  log_interval: 5000
+  evaluation_interval: 100000
+  checkpoint_interval: 50000
+  replay_seed: 1
+  policy_seed: 1
+  environment_seed: 1
+
+evaluation:
+  episodes: 50
+  seed: 42
+
+output:
+  run_dir: runs/puzzle_3x3_task4
+  checkpoint: runs/puzzle_3x3_task4/offline_final.msgpack
+  checkpoint_dir: runs/puzzle_3x3_task4/checkpoints
+  online_checkpoint: runs/puzzle_3x3_task4/online_final.msgpack
+  online_resume_checkpoint: runs/puzzle_3x3_task4/online_resume

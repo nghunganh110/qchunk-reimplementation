@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import gymnasium
 import mujoco
 import numpy as np
 import ogbench
@@ -42,9 +43,17 @@ class OGBenchBundle:
     validation_dataset: TransitionDataset
 
 
+class SparseRewardWrapper(gymnasium.RewardWrapper):
+    """Match the paper's sparse OGBench reward: -1 until success, then 0."""
+
+    def reward(self, reward: float) -> float:
+        return -float(reward != 0.0)
+
+
 def convert_ogbench_dataset(
     data: Mapping[str, np.ndarray],
     action_clip_eps: float | None = 1e-5,
+    sparse_reward: bool = False,
 ) -> TransitionDataset:
     """Convert a regular OGBench dataset into the QC transition format."""
     required = {
@@ -65,11 +74,15 @@ def convert_ogbench_dataset(
             raise ValueError("action_clip_eps must lie in [0, 1)")
         actions = np.clip(actions, -1.0 + action_clip_eps, 1.0 - action_clip_eps)
 
+    rewards = np.asarray(data["rewards"], dtype=np.float32)
+    if sparse_reward:
+        rewards = -(rewards != 0.0).astype(np.float32)
+
     return TransitionDataset(
         {
             "observations": data["observations"],
             "actions": actions,
-            "rewards": data["rewards"],
+            "rewards": rewards,
             "next_observations": data["next_observations"],
             "masks": data["masks"],
             "terminals": data["terminals"],
@@ -77,9 +90,15 @@ def convert_ogbench_dataset(
     )
 
 
-def make_ogbench_env(dataset_name: str, **env_kwargs: Any):
+def make_ogbench_env(
+    dataset_name: str,
+    *,
+    sparse_reward: bool = False,
+    **env_kwargs: Any,
+):
     """Create an OGBench environment without downloading a dataset."""
-    return _make_env_and_datasets(dataset_name, env_only=True, **env_kwargs)
+    env = _make_env_and_datasets(dataset_name, env_only=True, **env_kwargs)
+    return SparseRewardWrapper(env) if sparse_reward else env
 
 
 def _make_env_and_datasets(dataset_name: str, **kwargs):
@@ -283,6 +302,15 @@ def download_ogbench_dataset_archives(
     return paths
 
 
+def _time_limit_wrapper(env: Any) -> Any | None:
+    current = env
+    while current is not None:
+        if "_elapsed_steps" in vars(current):
+            return current
+        current = getattr(current, "env", None)
+    return None
+
+
 def capture_ogbench_env_state(env: Any) -> dict[str, Any]:
     """Capture MuJoCo and wrapper state required for mid-episode resume."""
     unwrapped = env.unwrapped
@@ -292,7 +320,8 @@ def capture_ogbench_env_state(env: Any) -> dict[str, Any]:
     specification = mujoco.mjtState.mjSTATE_FULLPHYSICS
     physics_state = np.empty(mujoco.mj_stateSize(unwrapped.model, specification), dtype=np.float64)
     mujoco.mj_getState(unwrapped.model, unwrapped.data, physics_state, specification)
-    elapsed_steps = getattr(env, "_elapsed_steps", None)
+    time_limit = _time_limit_wrapper(env)
+    elapsed_steps = None if time_limit is None else time_limit._elapsed_steps
     return {
         "physics_state": physics_state,
         "mocap_pos": unwrapped.data.mocap_pos.copy(),
@@ -361,14 +390,16 @@ def restore_ogbench_env_state(env: Any, state: Mapping[str, Any]) -> None:
     unwrapped.np_random.bit_generator.state = json.loads(state["np_random_state_json"])
 
     elapsed_steps = int(state["elapsed_steps"])
-    if hasattr(env, "_elapsed_steps"):
-        env._elapsed_steps = None if elapsed_steps < 0 else elapsed_steps
+    time_limit = _time_limit_wrapper(env)
+    if time_limit is not None:
+        time_limit._elapsed_steps = None if elapsed_steps < 0 else elapsed_steps
 
 
 def load_ogbench(
     dataset_name: str,
     dataset_dir: str | Path | None = None,
     action_clip_eps: float | None = 1e-5,
+    sparse_reward: bool = False,
 ) -> OGBenchBundle:
     """Create independent train/eval environments and load regular datasets."""
     archive_paths = download_ogbench_dataset_archives(dataset_name, dataset_dir)
@@ -384,14 +415,24 @@ def load_ogbench(
             "An OGBench dataset download produced an incomplete or corrupt NPZ archive. "
             f"Inspect these files and download them again: {archive_paths}"
         ) from error
-    eval_env = make_ogbench_env(dataset_name)
+    if sparse_reward:
+        env = SparseRewardWrapper(env)
+    eval_env = make_ogbench_env(dataset_name, sparse_reward=sparse_reward)
     try:
         if len(env.observation_space.shape) != 1:
             raise ValueError("Only state-based vector observations are currently supported")
         if len(env.action_space.shape) != 1:
             raise ValueError("Only continuous vector actions are currently supported")
-        train_dataset = convert_ogbench_dataset(train_data, action_clip_eps)
-        validation_dataset = convert_ogbench_dataset(validation_data, action_clip_eps)
+        train_dataset = convert_ogbench_dataset(
+            train_data,
+            action_clip_eps,
+            sparse_reward=sparse_reward,
+        )
+        validation_dataset = convert_ogbench_dataset(
+            validation_data,
+            action_clip_eps,
+            sparse_reward=sparse_reward,
+        )
     except Exception:
         env.close()
         eval_env.close()
