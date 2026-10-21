@@ -77,9 +77,9 @@ def convert_ogbench_dataset(
     )
 
 
-def make_ogbench_env(dataset_name: str):
+def make_ogbench_env(dataset_name: str, **env_kwargs: Any):
     """Create an OGBench environment without downloading a dataset."""
-    return _make_env_and_datasets(dataset_name, env_only=True)
+    return _make_env_and_datasets(dataset_name, env_only=True, **env_kwargs)
 
 
 def _make_env_and_datasets(dataset_name: str, **kwargs):

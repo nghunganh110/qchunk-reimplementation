@@ -259,3 +259,32 @@ uv run modal run --detach modal_qchunk.py \
 Online training commits the Volume after every 50,000-step resume checkpoint
 and at normal completion. Evaluations run every 100,000 environment steps and
 once at the final target step.
+
+Record one rendered episode from the final online checkpoint. This reuses the
+model already stored in the Modal Volume and writes a small animated GIF, so the
+large online resume checkpoint does not need to be downloaded:
+
+```bash
+uv run modal run modal_qchunk.py \
+  --mode simulation \
+  --gpu A10 \
+  --simulation-seed 42 \
+  --simulation-frame-stride 5 \
+  --simulation-fps 10 \
+  --budget-usd 30 \
+  --max-spend-usd 0.25
+```
+
+The final JSON reports the episode `success`, `episode_return`, `length`, and
+the GIF path. Download the recording from the Volume:
+
+```bash
+mkdir -p results/simulations
+uv run modal volume get \
+  qchunk-experiments \
+  runs/cube_triple/simulations/online_seed_42.gif \
+  results/simulations/online_seed_42.gif
+```
+
+Change `--simulation-seed` to record another episode. A single seed can fail
+even when the 50-episode success rate is high.

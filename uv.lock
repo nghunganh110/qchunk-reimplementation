@@ -1970,6 +1970,7 @@ source = { editable = "." }
 dependencies = [
     { name = "flax" },
     { name = "gymnasium" },
+    { name = "imageio" },
     { name = "jax", extra = ["cuda12"] },
     { name = "mujoco" },
     { name = "numpy" },
@@ -1989,6 +1990,7 @@ dev = [
 requires-dist = [
     { name = "flax" },
     { name = "gymnasium", specifier = "==1.1.1" },
+    { name = "imageio" },
     { name = "jax", extras = ["cuda12"] },
     { name = "mujoco", specifier = "==3.3.1" },
     { name = "numpy" },

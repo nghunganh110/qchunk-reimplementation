@@ -148,8 +148,11 @@ def run_gpu(
     steps: int,
     gpu: str,
     evaluation_episodes: int = 50,
+    simulation_seed: int = 42,
+    simulation_frame_stride: int = 5,
+    simulation_fps: int = 10,
 ) -> dict[str, object]:
-    """Benchmark, train, or evaluate the QC agent on a GPU worker."""
+    """Benchmark, train, evaluate, or record the QC agent on a GPU worker."""
     jax_details = _assert_gpu()
     resources = ModalResources(gpu=gpu, cpu_cores=CPU_CORES, memory_gib=MEMORY_MIB / 1024)
 
@@ -161,8 +164,17 @@ def run_gpu(
         result = _evaluate_offline(steps, resources)
     elif mode == "online":
         result = _train_online(steps, evaluation_episodes, resources)
+    elif mode == "simulation":
+        result = _simulate_online(
+            simulation_seed,
+            simulation_frame_stride,
+            simulation_fps,
+            resources,
+        )
     else:
-        raise ValueError("mode must be 'benchmark', 'offline', 'online', or 'evaluation'")
+        raise ValueError(
+            "mode must be 'benchmark', 'offline', 'online', 'evaluation', or 'simulation'"
+        )
     result["jax"] = jax_details
     result["gpu"] = gpu
     result["price_snapshot_date"] = PRICE_SNAPSHOT_DATE
@@ -311,6 +323,47 @@ def _evaluate_offline(episodes: int, resources: ModalResources) -> dict[str, obj
     }
 
 
+def _simulate_online(
+    seed: int,
+    frame_stride: int,
+    fps: int,
+    resources: ModalResources,
+) -> dict[str, object]:
+    from qchunk.simulate_ogbench import run
+
+    run_name = "cube_triple"
+    run_dir = VOLUME_ROOT / "runs" / run_name
+    checkpoint_path = run_dir / "online_final.msgpack"
+    if not checkpoint_path.is_file():
+        raise FileNotFoundError(f"online checkpoint does not exist: {checkpoint_path}")
+
+    output_path = run_dir / "simulations" / f"online_seed_{seed}.gif"
+    config_path = _runtime_config(run_name, DEFAULT_TARGET_STEPS)
+    started = time.monotonic()
+    try:
+        metrics = run(
+            config_path,
+            output_path,
+            checkpoint_path,
+            seed=seed,
+            frame_stride=frame_stride,
+            fps=fps,
+        )
+    finally:
+        volume.commit()
+    elapsed = time.monotonic() - started
+    return {
+        "mode": "simulation",
+        "checkpoint": str(checkpoint_path),
+        "output": str(output_path),
+        "size_bytes": output_path.stat().st_size,
+        "metrics": metrics,
+        "elapsed_seconds": elapsed,
+        "actual_cost_estimate_usd": estimate_cost(resources, elapsed),
+        "estimated_usd_per_hour": resources.usd_per_hour,
+    }
+
+
 def _online_resume_step(path: Path) -> int | None:
     from flax import serialization
 
@@ -416,12 +469,17 @@ def main(
     target_steps: int = DEFAULT_TARGET_STEPS,
     online_target_steps: int = DEFAULT_TARGET_STEPS,
     evaluation_episodes: int = 50,
+    simulation_seed: int = 42,
+    simulation_frame_stride: int = 5,
+    simulation_fps: int = 10,
     budget_usd: float = DEFAULT_BUDGET_USD,
     max_spend_usd: float = DEFAULT_MAX_SPEND_USD,
 ) -> None:
-    """Prepare data, then benchmark, train, or evaluate with a cost cap."""
-    if mode not in {"prepare", "benchmark", "offline", "online", "evaluation"}:
-        raise ValueError("mode must be prepare, benchmark, offline, online, or evaluation")
+    """Prepare data, then benchmark, train, evaluate, or record with a cost cap."""
+    if mode not in {"prepare", "benchmark", "offline", "online", "evaluation", "simulation"}:
+        raise ValueError(
+            "mode must be prepare, benchmark, offline, online, evaluation, or simulation"
+        )
     if budget_usd <= 0:
         raise ValueError("budget_usd must be positive")
     if not 0 < max_spend_usd <= budget_usd:
@@ -469,6 +527,22 @@ def main(
         )
         result = run_gpu.with_options(gpu=gpu, timeout=timeout).remote(
             "evaluation", evaluation_episodes, gpu
+        )
+    elif mode == "simulation":
+        timeout = min(2 * 60 * 60, budget_timeout_seconds(resources, max_spend_usd))
+        print(
+            f"Recording seed {simulation_seed} for up to {timeout / 60:.1f} minutes; "
+            f"the configured resource ceiling is ${estimate_cost(resources, timeout):.2f}.",
+            flush=True,
+        )
+        result = run_gpu.with_options(gpu=gpu, timeout=timeout).remote(
+            "simulation",
+            1,
+            gpu,
+            evaluation_episodes,
+            simulation_seed,
+            simulation_frame_stride,
+            simulation_fps,
         )
     else:
         timeout = budget_timeout_seconds(resources, max_spend_usd)
