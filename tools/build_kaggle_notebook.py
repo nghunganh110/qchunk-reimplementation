@@ -128,18 +128,42 @@ print("Source bundle SHA-256:", SOURCE_SHA256)
 '''
         ),
         _code(
-            """# Dùng JAX GPU có sẵn của Kaggle; chỉ cài các dependency còn lại.
+            """# Dùng JAX GPU có sẵn của Kaggle; tránh labmaze không có wheel cho Python 3.13.
 dependencies = [
     "flax==0.12.10",
     "optax==0.2.8",
-    "ogbench==1.1.2",
     "gymnasium==1.1.1",
     "mujoco==3.3.1",
     "imageio==2.38.1",
     "PyYAML==6.0.3",
+    "absl-py>=2.0",
+    "dm-env==1.6",
+    "dm-tree==0.1.10",
+    "glfw>=2.0",
+    "lxml>=5.0",
+    "PyOpenGL>=3.1.4",
+    "pyparsing>=3.0",
+    "requests>=2.0",
+    "scipy>=1.13",
+    "tqdm>=4.0",
 ]
 subprocess.run(
     [sys.executable, "-m", "pip", "install", "--quiet", *dependencies],
+    check=True,
+)
+# OGBench manipulation chỉ dùng dm_control.mjcf, không dùng labmaze. Cài hai
+# package này không kéo dependency labmaze vốn chưa hỗ trợ CPython 3.13.
+subprocess.run(
+    [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--quiet",
+        "--no-deps",
+        "dm-control==1.0.28",
+        "ogbench==1.1.2",
+    ],
     check=True,
 )
 subprocess.run(
