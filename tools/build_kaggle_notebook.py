@@ -183,18 +183,28 @@ subprocess.run(
 """
         ),
         _code(
-            """# Dừng ngay nếu notebook chưa thật sự có GPU JAX.
+            """# Kiểm tra JAX trong process tạm để VRAM được trả lại ngay sau kiểm tra.
+# Không import JAX trực tiếp trong kernel notebook: process huấn luyện ở ô 9 cần VRAM đó.
+jax_check = r'''import json
 import jax
 import jax.numpy as jnp
 
 devices = jax.devices()
-print("JAX:", jax.__version__)
-print("Backend:", jax.default_backend())
-print("Devices:", devices)
-assert any(device.platform in {"cuda", "gpu", "rocm"} for device in devices), (
-    "Không thấy GPU JAX. Hãy bật Settings > Accelerator > GPU rồi restart session."
-)
-print("GPU smoke test:", jnp.arange(4.0).devices())
+result = {
+    "jax": jax.__version__,
+    "backend": jax.default_backend(),
+    "devices": [str(device) for device in devices],
+    "platforms": [device.platform for device in devices],
+}
+jax.block_until_ready(jnp.arange(4.0).sum())
+print(json.dumps(result))
+if not any(platform in {"cuda", "gpu", "rocm"} for platform in result["platforms"]):
+    raise SystemExit("Không thấy GPU JAX")
+'''
+check_env = os.environ.copy()
+check_env["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+subprocess.run([sys.executable, "-c", jax_check], env=check_env, check=True)
+print("GPU JAX hoạt động; process kiểm tra đã thoát và trả lại VRAM.")
 """
         ),
         _code(
@@ -264,6 +274,12 @@ for path in dataset_paths:
         _code(
             """# Chạy phase đã chọn và tự động dùng checkpoint hiện có khi có thể.
 import time
+
+if any(name == "jax" or name.startswith("jax.") for name in sys.modules):
+    raise RuntimeError(
+        "Kernel notebook đã import JAX và có thể đang giữ VRAM. "
+        "Hãy chọn Restart Session, rồi chạy lại notebook từ đầu."
+    )
 
 
 def run_command(arguments):
