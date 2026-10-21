@@ -57,9 +57,11 @@ Trước khi chạy:
 
 1. Mở **Settings → Accelerator → GPU**; ưu tiên P100 nếu Kaggle cho phép chọn.
 2. Bật **Internet** để cài package và tải OGBench lần đầu.
-3. Giữ `MODE = \"benchmark\"` cho lần chạy đầu. Khi benchmark ổn, đổi lần lượt sang
-   `offline`, `evaluation`, `online`, `evaluation`, rồi `simulation`.
-4. Mỗi phase dài nên chạy trong một Kaggle Version riêng. Kaggle lưu tối đa 20 GB từ
+3. Giữ `MODE = \"benchmark\"` cho lần chạy đầu. Khi benchmark ổn, chạy offline theo
+   các target cộng dồn 300k → 600k → 900k → 1M qua nhiều Kaggle Version.
+4. Sau offline, chạy lần lượt `evaluation`, online pilot 10k, `online` 1M,
+   `evaluation`, rồi `simulation`.
+5. Mỗi phase dài nên chạy trong một Kaggle Version riêng. Kaggle lưu tối đa 20 GB từ
    `/kaggle/working`; gắn output của version trước làm Input và điền `PREVIOUS_RUN_DIR`
    để tiếp tục.
 
@@ -76,8 +78,14 @@ MODE = "benchmark"  # benchmark | offline | evaluation | online | simulation
 EXPERIMENT = "puzzle_3x3"  # puzzle_3x3 | cube_triple
 
 BENCHMARK_STEPS = 2_000
-OFFLINE_STEPS = 1_000_000
-ONLINE_STEPS = 1_000_000
+BENCHMARK_PROJECTION_STEPS = 1_000_000
+
+# Đây là target cộng dồn, không phải số bước chạy thêm trong session hiện tại.
+# Với Puzzle trên Kaggle T4, dùng lần lượt: 300_000, 600_000, 900_000, 1_000_000.
+OFFLINE_TARGET_STEPS = 300_000
+
+# Bắt đầu bằng pilot 10k; chỉ đổi thành 1_000_000 sau khi xem tốc độ và metrics pilot.
+ONLINE_TARGET_STEPS = 10_000
 EVALUATION_EPISODES = 50
 SIMULATION_SEED = 42
 
@@ -244,8 +252,10 @@ if PREVIOUS_DATASET_DIR and not DATASET_DIR.is_dir():
 DATASET_DIR.mkdir(parents=True, exist_ok=True)
 
 config["environment"]["dataset_dir"] = str(DATASET_DIR)
-config["offline"]["steps"] = OFFLINE_STEPS
-config["online"]["steps"] = ONLINE_STEPS
+config["offline"]["steps"] = (
+    BENCHMARK_PROJECTION_STEPS if MODE == "benchmark" else OFFLINE_TARGET_STEPS
+)
+config["online"]["steps"] = ONLINE_TARGET_STEPS
 config["evaluation"]["episodes"] = EVALUATION_EPISODES
 config["output"] = {
     "run_dir": str(RUN_DIR),
@@ -319,7 +329,7 @@ if MODE in {"benchmark", "offline"}:
     else:
         command = [
             "-m", "qchunk.train_ogbench", "--config", RUNTIME_CONFIG,
-            "--steps", OFFLINE_STEPS,
+            "--steps", OFFLINE_TARGET_STEPS,
         ]
         if resume is not None:
             command.extend(["--resume", resume])
@@ -334,7 +344,7 @@ elif MODE == "online":
         "-m", "qchunk.train_online_ogbench",
         "--config", RUNTIME_CONFIG,
         "--checkpoint", offline_checkpoint,
-        "--steps", ONLINE_STEPS,
+        "--steps", ONLINE_TARGET_STEPS,
         "--eval-episodes", EVALUATION_EPISODES,
     ]
     preflight = ["-m", "qchunk.preflight", "--config", RUNTIME_CONFIG, "--phase", "online", "--require-gpu"]

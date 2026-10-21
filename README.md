@@ -304,6 +304,13 @@ resume from its checkpoints. Kaggle keeps files under `/kaggle/working`, while
 the notebook also produces a smaller `qchunk_*.zip` containing final model
 checkpoints, metrics, configuration, and simulations.
 
+The Puzzle 3×3 benchmark measured about 9.46 updates/second on one Kaggle T4,
+which projects one million offline updates to roughly 29.4 hours. The notebook
+therefore defaults to a cumulative offline target of 300,000 steps and an online
+pilot target of 10,000 steps. Continue offline in separate saved Versions with
+targets 600,000, 900,000, and 1,000,000; each resumed run restores optimizer and
+dataset RNG state rather than restarting training.
+
 After changing package source or experiment configs, regenerate the embedded
 notebook with:
 
