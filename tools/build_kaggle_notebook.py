@@ -63,6 +63,10 @@ Trước khi chạy:
    `/kaggle/working`; gắn output của version trước làm Input và điền `PREVIOUS_RUN_DIR`
    để tiếp tục.
 
+Kaggle có thể cảnh báo xung đột với `kaggle-environments`, `dopamine-rl` hoặc
+`moviepy`. Các package đó không được dùng trong thực nghiệm này; cảnh báo không làm
+hỏng Q-chunking.
+
 `benchmark` chỉ đo thử 2.000 update và **không** ghi đè checkpoint chính.
 """
         ),
@@ -108,7 +112,9 @@ subprocess.run(["nvidia-smi"], check=False)
             f'''# Giải nén source code được nhúng trong chính notebook.
 import base64
 import io
+import os
 import shutil
+import sys
 import tarfile
 from pathlib import Path
 
@@ -123,7 +129,15 @@ archive_bytes = base64.b64decode(SOURCE_B64)
 assert __import__("hashlib").sha256(archive_bytes).hexdigest() == SOURCE_SHA256
 with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:gz") as archive:
     archive.extractall(PROJECT_DIR, filter="data")
+SOURCE_DIR = PROJECT_DIR / "src"
+source_path = str(SOURCE_DIR)
+if source_path not in sys.path:
+    sys.path.insert(0, source_path)
+os.environ["PYTHONPATH"] = os.pathsep.join(
+    part for part in (source_path, os.environ.get("PYTHONPATH", "")) if part
+)
 print("Đã giải nén source:", PROJECT_DIR)
+print("Đã thêm package path:", SOURCE_DIR)
 print("Source bundle SHA-256:", SOURCE_SHA256)
 '''
         ),
@@ -167,19 +181,11 @@ subprocess.run(
     check=True,
 )
 subprocess.run(
-    [
-        sys.executable,
-        "-m",
-        "pip",
-        "install",
-        "--quiet",
-        "--no-deps",
-        "--no-build-isolation",
-        "-e",
-        str(PROJECT_DIR),
-    ],
+    [sys.executable, "-c", "import qchunk; print('qchunk:', qchunk.__file__)"],
+    env=os.environ.copy(),
     check=True,
 )
+print("Có thể bỏ qua cảnh báo dependency của kaggle-environments, dopamine-rl và moviepy.")
 """
         ),
         _code(
