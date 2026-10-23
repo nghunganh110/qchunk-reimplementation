@@ -309,14 +309,21 @@ def run_command(arguments):
 
 
 def latest_offline_checkpoint():
-    candidates = [RUN_DIR / "offline_final.msgpack"]
-    candidates.extend((RUN_DIR / "checkpoints").glob("offline_step_*.msgpack"))
-    existing = [path for path in candidates if path.is_file()]
-    return max(existing, key=lambda path: path.stat().st_mtime_ns) if existing else None
+    periodic = list((RUN_DIR / "checkpoints").glob("offline_step_*.msgpack"))
+    if periodic:
+        return max(
+            periodic,
+            key=lambda path: int(path.stem.removeprefix("offline_step_")),
+        )
+
+    final = RUN_DIR / "offline_final.msgpack"
+    return final if final.is_file() else None
 
 
 if MODE in {"benchmark", "offline"}:
     resume = None if MODE == "benchmark" else latest_offline_checkpoint()
+    if resume is not None:
+        print("Checkpoint được chọn để resume:", resume)
     preflight = ["-m", "qchunk.preflight", "--config", RUNTIME_CONFIG, "--phase", "offline", "--require-gpu"]
     if resume is not None:
         preflight.extend(["--resume", resume])
