@@ -1,0 +1,354 @@
+{
+  "config": "configs/cube_triple.yaml",
+  "checkpoint": "runs/cube_triple/online_final.msgpack",
+  "checkpoint_sha256": "4b465cd0184f162047e6a7e59551917c5d44233729eb1bacbee11ce92d7df93e",
+  "environment": "cube-triple-play-singletask-task2-v0",
+  "sparse_reward": false,
+  "training_step": 1995001,
+  "episodes": 50,
+  "seed": 42,
+  "backend": "cpu",
+  "versions": {
+    "jax": "0.11.2",
+    "ogbench": "1.1.2",
+    "gymnasium": "1.1.1",
+    "mujoco": "3.3.1"
+  },
+  "variants": {
+    "qc_n8_grad_small": {
+      "settings": {
+        "name": "qc_n8_grad_small",
+        "candidates": 8,
+        "gradient_steps": 2,
+        "step_size": 0.05,
+        "radius": 0.1
+      },
+      "metrics": {
+        "success_rate": 0.94,
+        "mean_return": -408.98,
+        "mean_length": 215.98
+      },
+      "successes": 47,
+      "compile_seconds": 0.6868415569997524,
+      "rollout_seconds": 32.333411540999805,
+      "seconds_per_chunk": 0.014825039679504725,
+      "episode_results": [
+        {
+          "episode_return": -316.0,
+          "length": 162,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -385.0,
+          "length": 201,
+          "success": 1.0,
+          "chunks_sampled": 41
+        },
+        {
+          "episode_return": -295.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -282.0,
+          "length": 150,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -296.0,
+          "length": 158,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -271.0,
+          "length": 147,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -308.0,
+          "length": 164,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -581.0,
+          "length": 246,
+          "success": 1.0,
+          "chunks_sampled": 50
+        },
+        {
+          "episode_return": -282.0,
+          "length": 149,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -2432.0,
+          "length": 1000,
+          "success": 0.0,
+          "chunks_sampled": 200
+        },
+        {
+          "episode_return": -314.0,
+          "length": 167,
+          "success": 1.0,
+          "chunks_sampled": 34
+        },
+        {
+          "episode_return": -291.0,
+          "length": 157,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -270.0,
+          "length": 146,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -283.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -300.0,
+          "length": 163,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -284.0,
+          "length": 153,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -281.0,
+          "length": 150,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -266.0,
+          "length": 142,
+          "success": 1.0,
+          "chunks_sampled": 29
+        },
+        {
+          "episode_return": -282.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -301.0,
+          "length": 156,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -299.0,
+          "length": 156,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -270.0,
+          "length": 145,
+          "success": 1.0,
+          "chunks_sampled": 29
+        },
+        {
+          "episode_return": -357.0,
+          "length": 190,
+          "success": 1.0,
+          "chunks_sampled": 38
+        },
+        {
+          "episode_return": -287.0,
+          "length": 155,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -291.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -278.0,
+          "length": 151,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -510.0,
+          "length": 356,
+          "success": 1.0,
+          "chunks_sampled": 72
+        },
+        {
+          "episode_return": -287.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -313.0,
+          "length": 169,
+          "success": 1.0,
+          "chunks_sampled": 34
+        },
+        {
+          "episode_return": -384.0,
+          "length": 204,
+          "success": 1.0,
+          "chunks_sampled": 41
+        },
+        {
+          "episode_return": -290.0,
+          "length": 157,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -279.0,
+          "length": 147,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -283.0,
+          "length": 151,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -306.0,
+          "length": 165,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -345.0,
+          "length": 183,
+          "success": 1.0,
+          "chunks_sampled": 37
+        },
+        {
+          "episode_return": -1891.0,
+          "length": 1000,
+          "success": 0.0,
+          "chunks_sampled": 200
+        },
+        {
+          "episode_return": -277.0,
+          "length": 148,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -296.0,
+          "length": 158,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -264.0,
+          "length": 141,
+          "success": 1.0,
+          "chunks_sampled": 29
+        },
+        {
+          "episode_return": -267.0,
+          "length": 144,
+          "success": 1.0,
+          "chunks_sampled": 29
+        },
+        {
+          "episode_return": -441.0,
+          "length": 209,
+          "success": 1.0,
+          "chunks_sampled": 42
+        },
+        {
+          "episode_return": -273.0,
+          "length": 147,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -1438.0,
+          "length": 1000,
+          "success": 0.0,
+          "chunks_sampled": 200
+        },
+        {
+          "episode_return": -371.0,
+          "length": 187,
+          "success": 1.0,
+          "chunks_sampled": 38
+        },
+        {
+          "episode_return": -293.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -288.0,
+          "length": 154,
+          "success": 1.0,
+          "chunks_sampled": 31
+        },
+        {
+          "episode_return": -279.0,
+          "length": 149,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -344.0,
+          "length": 179,
+          "success": 1.0,
+          "chunks_sampled": 36
+        },
+        {
+          "episode_return": -311.0,
+          "length": 164,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -317.0,
+          "length": 167,
+          "success": 1.0,
+          "chunks_sampled": 34
+        }
+      ]
+    }
+  },
+  "diagnostics": {
+    "baseline_episodes": 10,
+    "visited_chunks": 490,
+    "sampled_chunks": 128,
+    "mean_q_before": -110.23912048339844,
+    "mean_q_after": -106.47538757324219,
+    "mean_q_delta": 3.763728618621826,
+    "fraction_q_increased": 0.96875,
+    "mean_l2_action_change": 0.37310200929641724,
+    "max_l2_action_change": 0.49916598200798035,
+    "critic_mean_deltas": [
+      3.471741199493408,
+      4.055716514587402
+    ]
+  }
+}

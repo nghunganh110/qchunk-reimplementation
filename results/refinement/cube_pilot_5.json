@@ -1,0 +1,169 @@
+{
+  "config": "configs/cube_triple.yaml",
+  "checkpoint": "runs/cube_triple/online_final.msgpack",
+  "checkpoint_sha256": "4b465cd0184f162047e6a7e59551917c5d44233729eb1bacbee11ce92d7df93e",
+  "environment": "cube-triple-play-singletask-task2-v0",
+  "sparse_reward": false,
+  "training_step": 1995001,
+  "episodes": 5,
+  "seed": 42,
+  "backend": "cpu",
+  "versions": {
+    "jax": "0.11.2",
+    "ogbench": "1.1.2",
+    "gymnasium": "1.1.1",
+    "mujoco": "3.3.1"
+  },
+  "variants": {
+    "qc_n8": {
+      "settings": {
+        "name": "qc_n8",
+        "candidates": 8,
+        "gradient_steps": 0,
+        "step_size": 0.0,
+        "radius": 0.0
+      },
+      "metrics": {
+        "success_rate": 1.0,
+        "mean_return": -361.6,
+        "mean_length": 189.8
+      },
+      "successes": 5,
+      "compile_seconds": 0.5057520279997334,
+      "rollout_seconds": 2.788229300000239,
+      "seconds_per_chunk": 0.014446783937825074,
+      "episode_results": [
+        {
+          "episode_return": -522.0,
+          "length": 233,
+          "success": 1.0,
+          "chunks_sampled": 47
+        },
+        {
+          "episode_return": -366.0,
+          "length": 232,
+          "success": 1.0,
+          "chunks_sampled": 47
+        },
+        {
+          "episode_return": -309.0,
+          "length": 161,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -307.0,
+          "length": 162,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -304.0,
+          "length": 161,
+          "success": 1.0,
+          "chunks_sampled": 33
+        }
+      ]
+    },
+    "qc_n8_grad": {
+      "settings": {
+        "name": "qc_n8_grad",
+        "candidates": 8,
+        "gradient_steps": 2,
+        "step_size": 0.25,
+        "radius": 0.5
+      },
+      "metrics": {
+        "success_rate": 0.8,
+        "mean_return": -743.4,
+        "mean_length": 394.6
+      },
+      "successes": 4,
+      "compile_seconds": 0.7564517090004301,
+      "rollout_seconds": 6.802912610000021,
+      "seconds_per_chunk": 0.0171790722474748,
+      "episode_results": [
+        {
+          "episode_return": -2179.0,
+          "length": 1000,
+          "success": 0.0,
+          "chunks_sampled": 200
+        },
+        {
+          "episode_return": -281.0,
+          "length": 150,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -401.0,
+          "length": 243,
+          "success": 1.0,
+          "chunks_sampled": 49
+        },
+        {
+          "episode_return": -573.0,
+          "length": 433,
+          "success": 1.0,
+          "chunks_sampled": 87
+        },
+        {
+          "episode_return": -283.0,
+          "length": 147,
+          "success": 1.0,
+          "chunks_sampled": 30
+        }
+      ]
+    },
+    "qc_n32": {
+      "settings": {
+        "name": "qc_n32",
+        "candidates": 32,
+        "gradient_steps": 0,
+        "step_size": 0.0,
+        "radius": 0.0
+      },
+      "metrics": {
+        "success_rate": 1.0,
+        "mean_return": -288.4,
+        "mean_length": 153.0
+      },
+      "successes": 5,
+      "compile_seconds": 0.5166292260000773,
+      "rollout_seconds": 3.7717477660007717,
+      "seconds_per_chunk": 0.02433385655484369,
+      "episode_results": [
+        {
+          "episode_return": -311.0,
+          "length": 160,
+          "success": 1.0,
+          "chunks_sampled": 32
+        },
+        {
+          "episode_return": -263.0,
+          "length": 141,
+          "success": 1.0,
+          "chunks_sampled": 29
+        },
+        {
+          "episode_return": -302.0,
+          "length": 162,
+          "success": 1.0,
+          "chunks_sampled": 33
+        },
+        {
+          "episode_return": -284.0,
+          "length": 150,
+          "success": 1.0,
+          "chunks_sampled": 30
+        },
+        {
+          "episode_return": -282.0,
+          "length": 152,
+          "success": 1.0,
+          "chunks_sampled": 31
+        }
+      ]
+    }
+  }
+}

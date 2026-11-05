@@ -1,0 +1,468 @@
+{
+  "created_at": "2026-10-21T02:40:00.374216+00:00",
+  "events": [
+    {
+      "argv": [
+        "/kaggle/working/qchunk-reimplementation/src/qchunk/train_ogbench.py",
+        "--config",
+        "/kaggle/working/puzzle_3x3_task4.yaml",
+        "--steps",
+        "300000"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 64,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/kaggle/working/ogbench_data",
+          "name": "puzzle-3x3-play-singletask-task4-v0",
+          "sparse_reward": true
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 300000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+          "checkpoint_dir": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints",
+          "online_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_final.msgpack",
+          "online_resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_resume",
+          "run_dir": "/kaggle/working/runs/puzzle_3x3_task4"
+        },
+        "seed": 0
+      },
+      "phase": "offline",
+      "resume_checkpoint": null,
+      "resume_step": 0,
+      "time": "2026-10-21T02:40:00.411375+00:00"
+    },
+    {
+      "argv": [
+        "/kaggle/working/qchunk-reimplementation/src/qchunk/train_ogbench.py",
+        "--config",
+        "/kaggle/working/puzzle_3x3_task4.yaml",
+        "--steps",
+        "650000",
+        "--resume",
+        "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 64,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/kaggle/working/ogbench_data",
+          "name": "puzzle-3x3-play-singletask-task4-v0",
+          "sparse_reward": true
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 650000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+          "checkpoint_dir": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints",
+          "online_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_final.msgpack",
+          "online_resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_resume",
+          "run_dir": "/kaggle/working/runs/puzzle_3x3_task4"
+        },
+        "seed": 0
+      },
+      "phase": "offline",
+      "resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+      "resume_step": 300000,
+      "time": "2026-10-21T14:50:34.716112+00:00"
+    },
+    {
+      "argv": [
+        "/kaggle/working/qchunk-reimplementation/src/qchunk/train_ogbench.py",
+        "--config",
+        "/kaggle/working/puzzle_3x3_task4.yaml",
+        "--steps",
+        "1000000",
+        "--resume",
+        "/kaggle/working/runs/puzzle_3x3_task4/checkpoints/offline_step_0600000.msgpack"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 64,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/kaggle/working/ogbench_data",
+          "name": "puzzle-3x3-play-singletask-task4-v0",
+          "sparse_reward": true
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+          "checkpoint_dir": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints",
+          "online_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_final.msgpack",
+          "online_resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_resume",
+          "run_dir": "/kaggle/working/runs/puzzle_3x3_task4"
+        },
+        "seed": 0
+      },
+      "phase": "offline",
+      "resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints/offline_step_0600000.msgpack",
+      "resume_step": 600000,
+      "time": "2026-10-23T01:22:55.989837+00:00"
+    },
+    {
+      "argv": [
+        "/kaggle/working/qchunk-reimplementation/src/qchunk/train_ogbench.py",
+        "--config",
+        "/kaggle/working/puzzle_3x3_task4.yaml",
+        "--steps",
+        "1000000",
+        "--resume",
+        "/kaggle/working/runs/puzzle_3x3_task4/checkpoints/offline_step_0950000.msgpack"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 64,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/kaggle/working/ogbench_data",
+          "name": "puzzle-3x3-play-singletask-task4-v0",
+          "sparse_reward": true
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+          "checkpoint_dir": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints",
+          "online_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_final.msgpack",
+          "online_resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_resume",
+          "run_dir": "/kaggle/working/runs/puzzle_3x3_task4"
+        },
+        "seed": 0
+      },
+      "phase": "offline",
+      "resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints/offline_step_0950000.msgpack",
+      "resume_step": 950000,
+      "time": "2026-10-23T15:25:34.210473+00:00"
+    },
+    {
+      "argv": [
+        "/kaggle/working/qchunk-reimplementation/src/qchunk/evaluate_ogbench.py",
+        "--config",
+        "/kaggle/working/puzzle_3x3_task4.yaml",
+        "--checkpoint",
+        "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+        "--episodes",
+        "50"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 64,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/kaggle/working/ogbench_data",
+          "name": "puzzle-3x3-play-singletask-task4-v0",
+          "sparse_reward": true
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+          "checkpoint_dir": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints",
+          "online_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_final.msgpack",
+          "online_resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_resume",
+          "run_dir": "/kaggle/working/runs/puzzle_3x3_task4"
+        },
+        "seed": 0
+      },
+      "phase": "evaluation",
+      "resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+      "resume_step": 1000000,
+      "time": "2026-10-24T03:21:25.849310+00:00"
+    },
+    {
+      "argv": [
+        "/kaggle/working/qchunk-reimplementation/src/qchunk/train_online_ogbench.py",
+        "--config",
+        "/kaggle/working/puzzle_3x3_task4.yaml",
+        "--checkpoint",
+        "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+        "--steps",
+        "10000",
+        "--eval-episodes",
+        "50"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 64,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/kaggle/working/ogbench_data",
+          "name": "puzzle-3x3-play-singletask-task4-v0",
+          "sparse_reward": true
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 10000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+          "checkpoint_dir": "/kaggle/working/runs/puzzle_3x3_task4/checkpoints",
+          "online_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_final.msgpack",
+          "online_resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/online_resume",
+          "run_dir": "/kaggle/working/runs/puzzle_3x3_task4"
+        },
+        "seed": 0
+      },
+      "phase": "online",
+      "resume_checkpoint": "/kaggle/working/runs/puzzle_3x3_task4/offline_final.msgpack",
+      "resume_step": 0,
+      "time": "2026-10-24T03:35:57.364854+00:00"
+    }
+  ],
+  "runtime": {
+    "git": {
+      "branch": null,
+      "commit": null,
+      "dirty": null
+    },
+    "hostname": "3d6493555e33",
+    "jax_backend": "gpu",
+    "jax_devices": [
+      "cuda:0",
+      "cuda:1"
+    ],
+    "packages": {
+      "flax": "0.12.10",
+      "gymnasium": "1.1.1",
+      "jax": "0.11.1",
+      "mujoco": "3.3.1",
+      "numpy": "2.1.3",
+      "ogbench": "1.1.2",
+      "optax": "0.2.8"
+    },
+    "platform": "Linux-6.18.48+-x86_64-with-glibc2.39",
+    "python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "schema_version": 1
+}

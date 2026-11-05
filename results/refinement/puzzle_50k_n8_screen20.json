@@ -1,0 +1,160 @@
+{
+  "config": "configs/puzzle_3x3.yaml",
+  "checkpoint": "/home/hunganh/Downloads/results/runs/puzzle_3x3_task4/checkpoints/offline_step_0050000.msgpack",
+  "checkpoint_sha256": "c350e7a6843264c4a2d32ac4e91bdc21c42aeaa27eded2b3101671295cae944a",
+  "environment": "puzzle-3x3-play-singletask-task4-v0",
+  "sparse_reward": true,
+  "training_step": 50000,
+  "episodes": 20,
+  "seed": 1000,
+  "backend": "cpu",
+  "versions": {
+    "jax": "0.11.2",
+    "ogbench": "1.1.2",
+    "gymnasium": "1.1.1",
+    "mujoco": "3.3.1"
+  },
+  "variants": {
+    "qc_n8": {
+      "settings": {
+        "name": "qc_n8",
+        "candidates": 8,
+        "gradient_steps": 0,
+        "step_size": 0.0,
+        "radius": 0.0,
+        "neighbors": 0
+      },
+      "metrics": {
+        "success_rate": 0.6,
+        "mean_return": -450.85,
+        "mean_length": 451.45
+      },
+      "successes": 12,
+      "compile_seconds": 0.5079714069997863,
+      "rollout_seconds": 24.10447351699986,
+      "seconds_per_chunk": 0.01331003507288783,
+      "episode_results": [
+        {
+          "episode_return": -318.0,
+          "length": 319,
+          "success": 1.0,
+          "chunks_sampled": 64
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -383.0,
+          "length": 384,
+          "success": 1.0,
+          "chunks_sampled": 77
+        },
+        {
+          "episode_return": -493.0,
+          "length": 494,
+          "success": 1.0,
+          "chunks_sampled": 99
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -295.0,
+          "length": 296,
+          "success": 1.0,
+          "chunks_sampled": 60
+        },
+        {
+          "episode_return": -499.0,
+          "length": 500,
+          "success": 1.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -441.0,
+          "length": 442,
+          "success": 1.0,
+          "chunks_sampled": 89
+        },
+        {
+          "episode_return": -482.0,
+          "length": 483,
+          "success": 1.0,
+          "chunks_sampled": 97
+        },
+        {
+          "episode_return": -456.0,
+          "length": 457,
+          "success": 1.0,
+          "chunks_sampled": 92
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -337.0,
+          "length": 338,
+          "success": 1.0,
+          "chunks_sampled": 68
+        },
+        {
+          "episode_return": -441.0,
+          "length": 442,
+          "success": 1.0,
+          "chunks_sampled": 89
+        },
+        {
+          "episode_return": -385.0,
+          "length": 386,
+          "success": 1.0,
+          "chunks_sampled": 78
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -487.0,
+          "length": 488,
+          "success": 1.0,
+          "chunks_sampled": 98
+        }
+      ]
+    }
+  }
+}

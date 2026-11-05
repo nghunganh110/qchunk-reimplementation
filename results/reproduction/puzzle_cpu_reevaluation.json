@@ -1,0 +1,21 @@
+{
+  "purpose": "Re-evaluate the saved puzzle offline checkpoint without retraining",
+  "command": "JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_ogbench --config /tmp/qc-puzzle-eval-smoke.yaml --checkpoint /home/hunganh/Downloads/qchunk_puzzle_3x3_task4_online/puzzle_3x3_task4/offline_final.msgpack --episodes 50",
+  "config_source": "configs/puzzle_3x3.yaml",
+  "config_change": "output.run_dir=/tmp/qc-puzzle-eval-smoke; all model, environment and evaluation settings unchanged",
+  "checkpoint_sha256": "4e41932d565934fcd3d40886c0f9516db1f118d1a01ea9d7d823eaa5292cd998",
+  "seed": 42,
+  "episodes": 50,
+  "backend": "CPU",
+  "versions": {
+    "jax": "0.11.2",
+    "ogbench": "1.1.2",
+    "gymnasium": "1.1.1",
+    "mujoco": "3.3.1"
+  },
+  "metrics": {
+    "success_rate": 1.0,
+    "mean_return": -227.78,
+    "mean_length": 228.78
+  }
+}

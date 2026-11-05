@@ -5,6 +5,12 @@ Action Chunking*. The codebase currently includes episode-safe chunk sampling,
 flow matching, Euler action generation, chunk critics, best-of-N selection,
 offline training, checkpoints, and an OGBench adapter.
 
+The small-scale comparison against the authors' released per-task results is in
+[`results/reproduction/README.md`](results/reproduction/README.md). It combines
+the existing cube-triple and puzzle-3x3 run logs with the published QC curves;
+the saved puzzle checkpoint was also re-evaluated on 50 episodes without
+retraining.
+
 ## Set up
 
 ```bash
@@ -317,3 +323,29 @@ notebook with:
 ```bash
 uv run python tools/build_kaggle_notebook.py
 ```
+
+## Inference-only gradient refinement experiment
+
+`src/qchunk/refinement.py` implements two projected Q-gradient steps around the
+best-of-N action chunk, without retraining. The paired CPU evaluations on the
+saved cube and puzzle checkpoints, commands, per-episode JSON, and limitations
+are in [`results/refinement/README.md`](results/refinement/README.md). The
+smaller trust radius shortened mean episodes relative to QC N=8 in these runs,
+but did not improve success rate; a larger radius reduced cube success. A
+follow-up projects the Q gradient onto directions formed by the three nearest
+flow candidates. It retained QC N=8's 50-episode success counts on both tasks,
+though its shorter mean episodes were not a reliable improvement in this sample.
+On an earlier puzzle checkpoint (50,000 offline updates), a fresh set of 50
+evaluation episodes gave 31/50 for QC N=8, 27/50 for small gradient refinement,
+28/50 for geometric refinement, and 13/50 for QC N=64. The comparison changes
+only inference and uses the same trained checkpoint for all four policies.
+
+The follow-up Q trace in `src/qchunk/diagnose_q_selection.py` compares the two
+critics' estimates for selected chunks with realized discounted returns. On
+the 50,000-update puzzle checkpoint, N=64 reached 11/50 versus 30/50 for N=8
+on a new evaluation seed, despite a higher predicted Q for its first chunk.
+At 100,000 updates, N=64 reached 50/50 versus 47/50. A checkpoint-level rule
+calibrated on those episodes selected N=8, then N=64; on separate evaluation
+episodes it reached 49/60, versus 45/60 for fixed N=8 and 35/60 for fixed
+N=64. Calibration itself required 200 environment episodes. The protocol,
+per-episode data, and caveats are in the same results README.

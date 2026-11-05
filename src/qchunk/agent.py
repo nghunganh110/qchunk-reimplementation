@@ -114,6 +114,32 @@ def best_of_n_action_chunks(
     q_aggregation: QAggregation = "mean",
 ) -> tuple[Array, Array]:
     """Generate N behavior chunks and return the candidate with maximum Q."""
+    candidates, candidate_q = sample_and_score_action_chunks(
+        flow_apply_fn,
+        flow_params,
+        critic_apply_fn,
+        critic_params,
+        observations,
+        rng,
+        action_chunk_dim=action_chunk_dim,
+        num_candidates=num_candidates,
+        num_flow_steps=num_flow_steps,
+    )
+    return select_best_action_chunks(candidates, candidate_q, q_aggregation)
+
+
+def sample_and_score_action_chunks(
+    flow_apply_fn: Callable,
+    flow_params: Any,
+    critic_apply_fn: Callable,
+    critic_params: Any,
+    observations: Array,
+    rng: Array,
+    action_chunk_dim: int,
+    num_candidates: int,
+    num_flow_steps: int = 10,
+) -> tuple[Array, Array]:
+    """Expose the QC candidate set and critic scores for inference experiments."""
     if not isinstance(num_candidates, int) or num_candidates <= 0:
         raise ValueError("num_candidates must be a positive integer")
 
@@ -130,7 +156,7 @@ def best_of_n_action_chunks(
         num_steps=num_flow_steps,
     )
     candidate_q = critic_apply_fn({"params": critic_params}, candidate_observations, candidates)
-    return select_best_action_chunks(candidates, candidate_q, q_aggregation)
+    return candidates, candidate_q
 
 
 def soft_update(target_params: Any, online_params: Any, tau: float) -> Any:

@@ -1,0 +1,425 @@
+{
+  "created_at": "2026-10-20T01:23:40.644545+00:00",
+  "events": [
+    {
+      "argv": [
+        "/pkg/modal/_container_entrypoint.py"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 32,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/vol/data",
+          "name": "cube-triple-play-singletask-task2-v0"
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+          "checkpoint_dir": "/vol/runs/cube_triple/checkpoints",
+          "online_checkpoint": "/vol/runs/cube_triple/online_final.msgpack",
+          "online_resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+          "run_dir": "/vol/runs/cube_triple"
+        },
+        "seed": 0
+      },
+      "phase": "offline",
+      "resume_checkpoint": null,
+      "resume_step": 0,
+      "time": "2026-10-20T01:23:40.655282+00:00"
+    },
+    {
+      "argv": [
+        "/pkg/modal/_container_entrypoint.py"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 32,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/vol/data",
+          "name": "cube-triple-play-singletask-task2-v0"
+        },
+        "evaluation": {
+          "episodes": 1,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+          "checkpoint_dir": "/vol/runs/cube_triple/checkpoints",
+          "online_checkpoint": "/vol/runs/cube_triple/online_final.msgpack",
+          "online_resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+          "run_dir": "/vol/runs/cube_triple"
+        },
+        "seed": 0
+      },
+      "phase": "evaluation",
+      "resume_checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+      "resume_step": 1000000,
+      "time": "2026-10-20T08:56:09.706370+00:00"
+    },
+    {
+      "argv": [
+        "/pkg/modal/_container_entrypoint.py"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 32,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/vol/data",
+          "name": "cube-triple-play-singletask-task2-v0"
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+          "checkpoint_dir": "/vol/runs/cube_triple/checkpoints",
+          "online_checkpoint": "/vol/runs/cube_triple/online_final.msgpack",
+          "online_resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+          "run_dir": "/vol/runs/cube_triple"
+        },
+        "seed": 0
+      },
+      "phase": "evaluation",
+      "resume_checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+      "resume_step": 1000000,
+      "time": "2026-10-20T09:03:51.872998+00:00"
+    },
+    {
+      "argv": [
+        "/pkg/modal/_container_entrypoint.py"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 32,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/vol/data",
+          "name": "cube-triple-play-singletask-task2-v0"
+        },
+        "evaluation": {
+          "episodes": 1,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 10000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+          "checkpoint_dir": "/vol/runs/cube_triple/checkpoints",
+          "online_checkpoint": "/vol/runs/cube_triple/online_final.msgpack",
+          "online_resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+          "run_dir": "/vol/runs/cube_triple"
+        },
+        "seed": 0
+      },
+      "phase": "online",
+      "resume_checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+      "resume_step": 0,
+      "time": "2026-10-20T09:14:39.236271+00:00"
+    },
+    {
+      "argv": [
+        "/pkg/modal/_container_entrypoint.py"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 32,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/vol/data",
+          "name": "cube-triple-play-singletask-task2-v0"
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+          "checkpoint_dir": "/vol/runs/cube_triple/checkpoints",
+          "online_checkpoint": "/vol/runs/cube_triple/online_final.msgpack",
+          "online_resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+          "run_dir": "/vol/runs/cube_triple"
+        },
+        "seed": 0
+      },
+      "phase": "online",
+      "resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+      "resume_step": 10000,
+      "time": "2026-10-20T09:22:17.975036+00:00"
+    },
+    {
+      "argv": [
+        "/pkg/modal/_container_entrypoint.py"
+      ],
+      "config": {
+        "agent": {
+          "critic_layer_norm": true,
+          "discount": 0.99,
+          "flow_layer_norm": false,
+          "hidden_dims": [
+            512,
+            512,
+            512,
+            512
+          ],
+          "horizon": 5,
+          "learning_rate": 0.0003,
+          "num_candidates": 32,
+          "num_critics": 2,
+          "num_flow_steps": 10,
+          "q_aggregation": "mean",
+          "tau": 0.005
+        },
+        "environment": {
+          "action_clip_eps": 1e-05,
+          "dataset_dir": "/vol/data",
+          "name": "cube-triple-play-singletask-task2-v0"
+        },
+        "evaluation": {
+          "episodes": 50,
+          "seed": 42
+        },
+        "offline": {
+          "batch_size": 256,
+          "checkpoint_interval": 50000,
+          "dataset_seed": 0,
+          "log_interval": 5000,
+          "steps": 1000000
+        },
+        "online": {
+          "batch_size": 256,
+          "buffer_capacity": 2000000,
+          "checkpoint_interval": 50000,
+          "environment_seed": 1,
+          "evaluation_interval": 100000,
+          "log_interval": 5000,
+          "policy_seed": 1,
+          "replay_seed": 1,
+          "start_training": 5000,
+          "steps": 1000000,
+          "updates_per_step": 1
+        },
+        "output": {
+          "checkpoint": "/vol/runs/cube_triple/offline_final.msgpack",
+          "checkpoint_dir": "/vol/runs/cube_triple/checkpoints",
+          "online_checkpoint": "/vol/runs/cube_triple/online_final.msgpack",
+          "online_resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+          "run_dir": "/vol/runs/cube_triple"
+        },
+        "seed": 0
+      },
+      "phase": "online",
+      "resume_checkpoint": "/vol/runs/cube_triple/online_resume",
+      "resume_step": 10000,
+      "time": "2026-10-20T09:25:38.859589+00:00"
+    }
+  ],
+  "runtime": {
+    "git": {
+      "branch": null,
+      "commit": "c2404e44078428770d0217f411d35df4b5c437c6",
+      "dirty": null
+    },
+    "hostname": "modal",
+    "jax_backend": "gpu",
+    "jax_devices": [
+      "cuda:0"
+    ],
+    "packages": {
+      "flax": "0.12.10",
+      "gymnasium": "1.1.1",
+      "jax": "0.11.2",
+      "mujoco": "3.3.1",
+      "numpy": "2.5.4",
+      "ogbench": "1.1.2",
+      "optax": "0.2.8"
+    },
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "python": "3.12.10 (main, May 21 2025, 23:34:56) [GCC 12.2.0]"
+  },
+  "schema_version": 1
+}

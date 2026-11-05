@@ -1,0 +1,22 @@
+{
+  "purpose": "Re-evaluate the saved cube online checkpoint without retraining",
+  "command": "JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_ogbench --config /tmp/qc-cube-eval-repeat.yaml --checkpoint /tmp/qc-cube-online-final.msgpack --episodes 50",
+  "config_source": "configs/cube_triple.yaml",
+  "config_change": "output.run_dir=/tmp/qc-cube-eval-repeat; all model, environment and evaluation settings unchanged",
+  "checkpoint_local_copy": "runs/cube_triple/online_final.msgpack",
+  "checkpoint_sha256": "4b465cd0184f162047e6a7e59551917c5d44233729eb1bacbee11ce92d7df93e",
+  "seed": 42,
+  "episodes": 50,
+  "backend": "CPU",
+  "versions": {
+    "jax": "0.11.2",
+    "ogbench": "1.1.2",
+    "gymnasium": "1.1.1",
+    "mujoco": "3.3.1"
+  },
+  "metrics": {
+    "success_rate": 0.98,
+    "mean_return": -351.2,
+    "mean_length": 184.86
+  }
+}

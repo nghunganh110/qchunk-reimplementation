@@ -1,0 +1,1303 @@
+{
+  "config": "configs/puzzle_3x3.yaml",
+  "checkpoint": "/home/hunganh/Downloads/results/runs/puzzle_3x3_task4/checkpoints/offline_step_0050000.msgpack",
+  "checkpoint_sha256": "c350e7a6843264c4a2d32ac4e91bdc21c42aeaa27eded2b3101671295cae944a",
+  "environment": "puzzle-3x3-play-singletask-task4-v0",
+  "sparse_reward": true,
+  "training_step": 50000,
+  "episodes": 50,
+  "seed": 2026,
+  "backend": "cpu",
+  "versions": {
+    "jax": "0.11.2",
+    "ogbench": "1.1.2",
+    "gymnasium": "1.1.1",
+    "mujoco": "3.3.1"
+  },
+  "variants": {
+    "qc_n8": {
+      "settings": {
+        "name": "qc_n8",
+        "candidates": 8,
+        "gradient_steps": 0,
+        "step_size": 0.0,
+        "radius": 0.0,
+        "neighbors": 0
+      },
+      "metrics": {
+        "success_rate": 0.62,
+        "mean_return": -440.12,
+        "mean_length": 440.74
+      },
+      "successes": 31,
+      "compile_seconds": 0.46772173499994096,
+      "rollout_seconds": 55.01476092300072,
+      "seconds_per_chunk": 0.012449595139850809,
+      "episode_results": [
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -404.0,
+          "length": 405,
+          "success": 1.0,
+          "chunks_sampled": 81
+        },
+        {
+          "episode_return": -375.0,
+          "length": 376,
+          "success": 1.0,
+          "chunks_sampled": 76
+        },
+        {
+          "episode_return": -430.0,
+          "length": 431,
+          "success": 1.0,
+          "chunks_sampled": 87
+        },
+        {
+          "episode_return": -400.0,
+          "length": 401,
+          "success": 1.0,
+          "chunks_sampled": 81
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -474.0,
+          "length": 475,
+          "success": 1.0,
+          "chunks_sampled": 95
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -303.0,
+          "length": 304,
+          "success": 1.0,
+          "chunks_sampled": 61
+        },
+        {
+          "episode_return": -350.0,
+          "length": 351,
+          "success": 1.0,
+          "chunks_sampled": 71
+        },
+        {
+          "episode_return": -394.0,
+          "length": 395,
+          "success": 1.0,
+          "chunks_sampled": 79
+        },
+        {
+          "episode_return": -477.0,
+          "length": 478,
+          "success": 1.0,
+          "chunks_sampled": 96
+        },
+        {
+          "episode_return": -244.0,
+          "length": 245,
+          "success": 1.0,
+          "chunks_sampled": 49
+        },
+        {
+          "episode_return": -489.0,
+          "length": 490,
+          "success": 1.0,
+          "chunks_sampled": 98
+        },
+        {
+          "episode_return": -415.0,
+          "length": 416,
+          "success": 1.0,
+          "chunks_sampled": 84
+        },
+        {
+          "episode_return": -402.0,
+          "length": 403,
+          "success": 1.0,
+          "chunks_sampled": 81
+        },
+        {
+          "episode_return": -348.0,
+          "length": 349,
+          "success": 1.0,
+          "chunks_sampled": 70
+        },
+        {
+          "episode_return": -478.0,
+          "length": 479,
+          "success": 1.0,
+          "chunks_sampled": 96
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -313.0,
+          "length": 314,
+          "success": 1.0,
+          "chunks_sampled": 63
+        },
+        {
+          "episode_return": -405.0,
+          "length": 406,
+          "success": 1.0,
+          "chunks_sampled": 82
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -479.0,
+          "length": 480,
+          "success": 1.0,
+          "chunks_sampled": 96
+        },
+        {
+          "episode_return": -455.0,
+          "length": 456,
+          "success": 1.0,
+          "chunks_sampled": 92
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -318.0,
+          "length": 319,
+          "success": 1.0,
+          "chunks_sampled": 64
+        },
+        {
+          "episode_return": -425.0,
+          "length": 426,
+          "success": 1.0,
+          "chunks_sampled": 86
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -433.0,
+          "length": 434,
+          "success": 1.0,
+          "chunks_sampled": 87
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -320.0,
+          "length": 321,
+          "success": 1.0,
+          "chunks_sampled": 65
+        },
+        {
+          "episode_return": -455.0,
+          "length": 456,
+          "success": 1.0,
+          "chunks_sampled": 92
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -379.0,
+          "length": 380,
+          "success": 1.0,
+          "chunks_sampled": 76
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -397.0,
+          "length": 398,
+          "success": 1.0,
+          "chunks_sampled": 80
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -358.0,
+          "length": 359,
+          "success": 1.0,
+          "chunks_sampled": 72
+        },
+        {
+          "episode_return": -388.0,
+          "length": 389,
+          "success": 1.0,
+          "chunks_sampled": 78
+        },
+        {
+          "episode_return": -435.0,
+          "length": 436,
+          "success": 1.0,
+          "chunks_sampled": 88
+        },
+        {
+          "episode_return": -489.0,
+          "length": 490,
+          "success": 1.0,
+          "chunks_sampled": 98
+        },
+        {
+          "episode_return": -474.0,
+          "length": 475,
+          "success": 1.0,
+          "chunks_sampled": 95
+        }
+      ]
+    },
+    "qc_n8_grad_small": {
+      "settings": {
+        "name": "qc_n8_grad_small",
+        "candidates": 8,
+        "gradient_steps": 2,
+        "step_size": 0.05,
+        "radius": 0.1,
+        "neighbors": 0
+      },
+      "metrics": {
+        "success_rate": 0.54,
+        "mean_return": -446.34,
+        "mean_length": 446.88
+      },
+      "successes": 27,
+      "compile_seconds": 0.6890873690008448,
+      "rollout_seconds": 59.892157389000204,
+      "seconds_per_chunk": 0.013362819587014772,
+      "episode_results": [
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -409.0,
+          "length": 410,
+          "success": 1.0,
+          "chunks_sampled": 82
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -445.0,
+          "length": 446,
+          "success": 1.0,
+          "chunks_sampled": 90
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -445.0,
+          "length": 446,
+          "success": 1.0,
+          "chunks_sampled": 90
+        },
+        {
+          "episode_return": -397.0,
+          "length": 398,
+          "success": 1.0,
+          "chunks_sampled": 80
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -340.0,
+          "length": 341,
+          "success": 1.0,
+          "chunks_sampled": 69
+        },
+        {
+          "episode_return": -429.0,
+          "length": 430,
+          "success": 1.0,
+          "chunks_sampled": 86
+        },
+        {
+          "episode_return": -422.0,
+          "length": 423,
+          "success": 1.0,
+          "chunks_sampled": 85
+        },
+        {
+          "episode_return": -337.0,
+          "length": 338,
+          "success": 1.0,
+          "chunks_sampled": 68
+        },
+        {
+          "episode_return": -370.0,
+          "length": 371,
+          "success": 1.0,
+          "chunks_sampled": 75
+        },
+        {
+          "episode_return": -441.0,
+          "length": 442,
+          "success": 1.0,
+          "chunks_sampled": 89
+        },
+        {
+          "episode_return": -499.0,
+          "length": 500,
+          "success": 1.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -395.0,
+          "length": 396,
+          "success": 1.0,
+          "chunks_sampled": 80
+        },
+        {
+          "episode_return": -421.0,
+          "length": 422,
+          "success": 1.0,
+          "chunks_sampled": 85
+        },
+        {
+          "episode_return": -386.0,
+          "length": 387,
+          "success": 1.0,
+          "chunks_sampled": 78
+        },
+        {
+          "episode_return": -485.0,
+          "length": 486,
+          "success": 1.0,
+          "chunks_sampled": 98
+        },
+        {
+          "episode_return": -470.0,
+          "length": 471,
+          "success": 1.0,
+          "chunks_sampled": 95
+        },
+        {
+          "episode_return": -431.0,
+          "length": 432,
+          "success": 1.0,
+          "chunks_sampled": 87
+        },
+        {
+          "episode_return": -327.0,
+          "length": 328,
+          "success": 1.0,
+          "chunks_sampled": 66
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -427.0,
+          "length": 428,
+          "success": 1.0,
+          "chunks_sampled": 86
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -362.0,
+          "length": 363,
+          "success": 1.0,
+          "chunks_sampled": 73
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -413.0,
+          "length": 414,
+          "success": 1.0,
+          "chunks_sampled": 83
+        },
+        {
+          "episode_return": -304.0,
+          "length": 305,
+          "success": 1.0,
+          "chunks_sampled": 61
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -387.0,
+          "length": 388,
+          "success": 1.0,
+          "chunks_sampled": 78
+        },
+        {
+          "episode_return": -395.0,
+          "length": 396,
+          "success": 1.0,
+          "chunks_sampled": 80
+        },
+        {
+          "episode_return": -345.0,
+          "length": 346,
+          "success": 1.0,
+          "chunks_sampled": 70
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -284.0,
+          "length": 285,
+          "success": 1.0,
+          "chunks_sampled": 57
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -451.0,
+          "length": 452,
+          "success": 1.0,
+          "chunks_sampled": 91
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        }
+      ]
+    },
+    "qc_n8_grad_geo": {
+      "settings": {
+        "name": "qc_n8_grad_geo",
+        "candidates": 8,
+        "gradient_steps": 2,
+        "step_size": 0.05,
+        "radius": 0.1,
+        "neighbors": 3
+      },
+      "metrics": {
+        "success_rate": 0.56,
+        "mean_return": -448.72,
+        "mean_length": 449.28
+      },
+      "successes": 28,
+      "compile_seconds": 0.9053997510000045,
+      "rollout_seconds": 59.906957393000994,
+      "seconds_per_chunk": 0.013300834234680505,
+      "episode_results": [
+        {
+          "episode_return": -255.0,
+          "length": 256,
+          "success": 1.0,
+          "chunks_sampled": 52
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -405.0,
+          "length": 406,
+          "success": 1.0,
+          "chunks_sampled": 82
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -458.0,
+          "length": 459,
+          "success": 1.0,
+          "chunks_sampled": 92
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -412.0,
+          "length": 413,
+          "success": 1.0,
+          "chunks_sampled": 83
+        },
+        {
+          "episode_return": -370.0,
+          "length": 371,
+          "success": 1.0,
+          "chunks_sampled": 75
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -398.0,
+          "length": 399,
+          "success": 1.0,
+          "chunks_sampled": 80
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -454.0,
+          "length": 455,
+          "success": 1.0,
+          "chunks_sampled": 91
+        },
+        {
+          "episode_return": -329.0,
+          "length": 330,
+          "success": 1.0,
+          "chunks_sampled": 66
+        },
+        {
+          "episode_return": -484.0,
+          "length": 485,
+          "success": 1.0,
+          "chunks_sampled": 97
+        },
+        {
+          "episode_return": -377.0,
+          "length": 378,
+          "success": 1.0,
+          "chunks_sampled": 76
+        },
+        {
+          "episode_return": -462.0,
+          "length": 463,
+          "success": 1.0,
+          "chunks_sampled": 93
+        },
+        {
+          "episode_return": -370.0,
+          "length": 371,
+          "success": 1.0,
+          "chunks_sampled": 75
+        },
+        {
+          "episode_return": -460.0,
+          "length": 461,
+          "success": 1.0,
+          "chunks_sampled": 93
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -381.0,
+          "length": 382,
+          "success": 1.0,
+          "chunks_sampled": 77
+        },
+        {
+          "episode_return": -469.0,
+          "length": 470,
+          "success": 1.0,
+          "chunks_sampled": 94
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -464.0,
+          "length": 465,
+          "success": 1.0,
+          "chunks_sampled": 93
+        },
+        {
+          "episode_return": -463.0,
+          "length": 464,
+          "success": 1.0,
+          "chunks_sampled": 93
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -318.0,
+          "length": 319,
+          "success": 1.0,
+          "chunks_sampled": 64
+        },
+        {
+          "episode_return": -424.0,
+          "length": 425,
+          "success": 1.0,
+          "chunks_sampled": 85
+        },
+        {
+          "episode_return": -490.0,
+          "length": 491,
+          "success": 1.0,
+          "chunks_sampled": 99
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -344.0,
+          "length": 345,
+          "success": 1.0,
+          "chunks_sampled": 69
+        },
+        {
+          "episode_return": -471.0,
+          "length": 472,
+          "success": 1.0,
+          "chunks_sampled": 95
+        },
+        {
+          "episode_return": -434.0,
+          "length": 435,
+          "success": 1.0,
+          "chunks_sampled": 87
+        },
+        {
+          "episode_return": -385.0,
+          "length": 386,
+          "success": 1.0,
+          "chunks_sampled": 78
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -361.0,
+          "length": 362,
+          "success": 1.0,
+          "chunks_sampled": 73
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -468.0,
+          "length": 469,
+          "success": 1.0,
+          "chunks_sampled": 94
+        },
+        {
+          "episode_return": -355.0,
+          "length": 356,
+          "success": 1.0,
+          "chunks_sampled": 72
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -375.0,
+          "length": 376,
+          "success": 1.0,
+          "chunks_sampled": 76
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        }
+      ]
+    },
+    "qc_n64": {
+      "settings": {
+        "name": "qc_n64",
+        "candidates": 64,
+        "gradient_steps": 0,
+        "step_size": 0.0,
+        "radius": 0.0,
+        "neighbors": 0
+      },
+      "metrics": {
+        "success_rate": 0.26,
+        "mean_return": -480.14,
+        "mean_length": 480.4
+      },
+      "successes": 13,
+      "compile_seconds": 0.49059291099911206,
+      "rollout_seconds": 119.12794883099923,
+      "seconds_per_chunk": 0.02477187540673721,
+      "episode_results": [
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -460.0,
+          "length": 461,
+          "success": 1.0,
+          "chunks_sampled": 93
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -331.0,
+          "length": 332,
+          "success": 1.0,
+          "chunks_sampled": 67
+        },
+        {
+          "episode_return": -429.0,
+          "length": 430,
+          "success": 1.0,
+          "chunks_sampled": 86
+        },
+        {
+          "episode_return": -466.0,
+          "length": 467,
+          "success": 1.0,
+          "chunks_sampled": 94
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -412.0,
+          "length": 413,
+          "success": 1.0,
+          "chunks_sampled": 83
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -470.0,
+          "length": 471,
+          "success": 1.0,
+          "chunks_sampled": 95
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -472.0,
+          "length": 473,
+          "success": 1.0,
+          "chunks_sampled": 95
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -409.0,
+          "length": 410,
+          "success": 1.0,
+          "chunks_sampled": 82
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -394.0,
+          "length": 395,
+          "success": 1.0,
+          "chunks_sampled": 79
+        },
+        {
+          "episode_return": -487.0,
+          "length": 488,
+          "success": 1.0,
+          "chunks_sampled": 98
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -342.0,
+          "length": 343,
+          "success": 1.0,
+          "chunks_sampled": 69
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -443.0,
+          "length": 444,
+          "success": 1.0,
+          "chunks_sampled": 89
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -392.0,
+          "length": 393,
+          "success": 1.0,
+          "chunks_sampled": 79
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        },
+        {
+          "episode_return": -500.0,
+          "length": 500,
+          "success": 0.0,
+          "chunks_sampled": 100
+        }
+      ]
+    }
+  }
+}
