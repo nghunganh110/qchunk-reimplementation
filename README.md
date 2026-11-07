@@ -1,15 +1,60 @@
-# Q-chunking reimplementation
+# Q-chunking: independent reimplementation and evaluation
 
-An implementation of the core QC algorithm from *Reinforcement Learning with
-Action Chunking*. The codebase currently includes episode-safe chunk sampling,
-flow matching, Euler action generation, chunk critics, best-of-N selection,
-offline training, checkpoints, and an OGBench adapter.
+An independent implementation of the QC algorithm from Li, Zhou, and Levine,
+[*Reinforcement Learning with Action Chunking*](https://proceedings.neurips.cc/paper_files/paper/2025/hash/50348e8f9aef984abe0ea1ec2a326f78-Abstract-Conference.html)
+(NeurIPS 2025). This is a student research project, not the authors' official
+implementation. The [official QC repository](https://github.com/ColinQiyangLi/qc)
+is used for the released comparison curves and hyperparameter reference.
 
-The small-scale comparison against the authors' released per-task results is in
-[`results/reproduction/README.md`](results/reproduction/README.md). It combines
-the existing cube-triple and puzzle-3x3 run logs with the published QC curves;
-the saved puzzle checkpoint was also re-evaluated on 50 episodes without
-retraining.
+The project asks two questions: **Can the main QC learning trends be reproduced
+on two OGBench tasks with an independently written implementation?** And **what
+happens when action chunks are refined or the best-of-N candidate count changes
+at inference time?** The code implements episode-safe chunk sampling, flow
+matching, Euler action generation, chunk critics, best-of-N selection, offline
+pretraining, online fine-tuning, resumable checkpoints, and OGBench evaluation.
+[`PAPER_SPEC.md`](PAPER_SPEC.md) maps the equations and protocol to the code.
+
+## Results at a glance
+
+| Task and evaluation point | Authors' released QC curve | This implementation |
+| --- | ---: | ---: |
+| Cube-triple task2, after 1M offline updates | 0% | 0/50 successes |
+| Cube-triple task2, after 1M online steps | 89% | 48/50 successes |
+| Puzzle-3x3 task4, after 1M offline updates | 100% | 50/50 successes |
+
+These are **two tasks, one training seed per task, and 50 evaluation episodes
+per point**. The authors' values average four training seeds; the 96% versus
+89% cube result is not evidence of improvement. The cube run reproduced the
+near-zero offline result and the strong rise during online fine-tuning. The
+puzzle run matched the released offline endpoint. The puzzle online phase was
+only a 10,000-step pilot and has no matching paper endpoint. See the
+[comparison and provenance](results/reproduction/README.md) and the
+[English research summary](docs/RESULTS.md).
+
+The inference-only extension tested projected Q-gradient updates around the
+selected chunk. It did **not** show a reliable success-rate gain. At an early
+puzzle checkpoint, increasing the candidate count from 8 to 64 reduced success
+on a paired 50-episode evaluation from 31/50 to 13/50; this was checkpoint
+specific, and the pattern reversed later in training. The
+[extension protocol and per-episode results](results/refinement/README.md)
+separate exploratory comparisons, calibration, and holdout evaluation.
+
+## Repository guide
+
+- `src/qchunk/`: algorithm, OGBench integration, training, evaluation, and
+  diagnostics.
+- `configs/`: task configurations and checkpoint/logging destinations.
+- `tests/`: unit and pipeline tests for chunk boundaries, updates, checkpoints,
+  and evaluation.
+- `results/`: small run logs, manifests, plots, per-episode diagnostics, and
+  interpretation. Large model checkpoints and downloaded datasets are excluded.
+- `notebooks/`: generated Kaggle notebooks for GPU runs.
+- `tools/`: plot, comparison, and notebook-generation scripts.
+
+The recorded results are inspectable without retraining. Repeating full runs
+requires OGBench data, GPU time, and the omitted model checkpoints. The
+comparison plot can be rebuilt from the committed run logs and released paper
+data using the command in `results/reproduction/README.md`.
 
 ## Set up
 

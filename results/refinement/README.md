@@ -1,5 +1,11 @@
 # Thử nghiệm mở rộng: tinh chỉnh action chunk bằng gradient Q
 
+Các checkpoint lớn không được lưu trong Git. Để chạy lại các lệnh bên dưới,
+đặt checkpoint puzzle cuối tại `runs/puzzle_3x3_task4/offline_final.msgpack`
+và các checkpoint trung gian trong
+`runs/puzzle_3x3_task4/checkpoints/`. Các hash trong tệp JSON giúp kiểm tra
+đúng phiên bản checkpoint.
+
 ## Ý tưởng và cách chạy
 
 Sau khi QC chọn chunk tốt nhất trong `N` mẫu từ flow, chỉ ở lúc suy luận, cập nhật chunk hai lần theo gradient của **trung bình hai critic**. Mỗi bước có độ dài L2 `step_size`, chặn hành động vào `[-1, 1]`, rồi giới hạn khoảng cách L2 so với chunk ban đầu đã chặn bởi `radius`. Biến thể hình học lấy ba chunk flow gần chunk được QC chọn nhất theo khoảng cách Euclid, rồi chiếu gradient Q vào không gian do ba vector hiệu tạo ra bằng phép chiếu ridge. Nó chỉ thay hướng cập nhật; số mẫu, bước, độ dài bước và bán kính giữ như gradient nhỏ. Đây là một xấp xỉ hình học dựa trên vài mẫu, **không bảo đảm** chunk tinh chỉnh vẫn thuộc phân phối flow. Không thay checkpoint, flow, critic hoặc thuật toán huấn luyện. Mã: `src/qchunk/refinement.py`; lệnh đánh giá: `src/qchunk/evaluate_refinement.py`.
@@ -23,7 +29,7 @@ JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_refinement 
 
 JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_refinement \
   --config configs/puzzle_3x3.yaml \
-  --checkpoint /home/hunganh/Downloads/qchunk_puzzle_3x3_task4_online/puzzle_3x3_task4/offline_final.msgpack \
+  --checkpoint runs/puzzle_3x3_task4/offline_final.msgpack \
   --output results/refinement/puzzle_eval_50.json --episodes 50 \
   --variants qc_n8 qc_n8_grad_small qc_n64
 
@@ -35,7 +41,7 @@ JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_refinement 
 
 JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_refinement \
   --config configs/puzzle_3x3.yaml \
-  --checkpoint /home/hunganh/Downloads/qchunk_puzzle_3x3_task4_online/puzzle_3x3_task4/offline_final.msgpack \
+  --checkpoint runs/puzzle_3x3_task4/offline_final.msgpack \
   --output results/refinement/puzzle_geometric_50.json --episodes 50 \
   --variants qc_n8_grad_geo
 ```
@@ -85,7 +91,7 @@ Không có checkpoint 75.000 bước trong thư mục kết quả (tệp `offlin
 ```bash
 JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.evaluate_refinement \
   --config configs/puzzle_3x3.yaml \
-  --checkpoint /home/hunganh/Downloads/results/runs/puzzle_3x3_task4/checkpoints/offline_step_0050000.msgpack \
+  --checkpoint runs/puzzle_3x3_task4/checkpoints/offline_step_0050000.msgpack \
   --output results/refinement/puzzle_50k_holdout50.json \
   --episodes 50 --seed 2026 \
   --variants qc_n8 qc_n8_grad_small qc_n8_grad_geo qc_n64
@@ -132,7 +138,7 @@ Tệp kết quả: `puzzle_50k_q_trace50.json`, `puzzle_100k_q_trace50.json` (hi
 ```bash
 JAX_PLATFORMS=cpu PYTHONPATH=src .venv/bin/python -m qchunk.diagnose_q_selection \
   --config configs/puzzle_3x3.yaml \
-  --checkpoint /home/hunganh/Downloads/results/runs/puzzle_3x3_task4/checkpoints/offline_step_0050000.msgpack \
+  --checkpoint runs/puzzle_3x3_task4/checkpoints/offline_step_0050000.msgpack \
   --output results/refinement/puzzle_50k_q_trace50.json \
   --episodes 50 --seed 3000 --candidates 8 64
 ```

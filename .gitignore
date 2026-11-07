@@ -23,6 +23,6 @@ results/puzzle_3x3_task4/*
 !results/puzzle_3x3_task4/metrics.jsonl
 !results/reproduction/
 !results/refinement/
-output/pdf/*
-!output/pdf/IT3150_QChunk_NguyenHungAnh.pdf
+output/pdf/
+reports/it3150/
 wandb/
